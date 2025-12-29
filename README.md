@@ -36,16 +36,19 @@ finadvisor/
 ### Backend Setup
 
 1. Navigate to backend directory:
+
    ```bash
    cd backend
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Create `.env` file with:
+
    ```
    PORT=5000
    MONGO_URI=mongodb://localhost:27017/finadvisor
@@ -63,16 +66,19 @@ finadvisor/
 ### Frontend Setup
 
 1. Navigate to frontend directory:
+
    ```bash
    cd frontend
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -82,17 +88,20 @@ finadvisor/
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - Register user
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/profile` - Get user profile
 
 ### Expenses
+
 - `GET /api/expenses` - Get expenses
 - `POST /api/expenses` - Add expense
 - `PUT /api/expenses/:id` - Update expense
 - `DELETE /api/expenses/:id` - Delete expense
 
 ### AI
+
 - `POST /api/ai/query` - Ask AI question
 
 ## Contributing
