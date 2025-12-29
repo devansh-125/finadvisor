@@ -12,11 +12,13 @@ A Node.js backend for the FinAdvisor application, providing AI-powered financial
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Create a `.env` file with the following variables:
+
    ```
    PORT=5000
    MONGO_URI=mongodb://localhost:27017/finadvisor
@@ -35,17 +37,20 @@ A Node.js backend for the FinAdvisor application, providing AI-powered financial
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - Register a new user
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/profile` - Get user profile (requires auth)
 
 ### Expenses
+
 - `GET /api/expenses` - Get all expenses (requires auth)
 - `POST /api/expenses` - Add new expense (requires auth)
 - `PUT /api/expenses/:id` - Update expense (requires auth)
 - `DELETE /api/expenses/:id` - Delete expense (requires auth)
 
 ### AI
+
 - `POST /api/ai/query` - Ask AI financial question (requires auth)
 
 ## Technologies Used
