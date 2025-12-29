@@ -12,23 +12,31 @@ A Node.js backend for the FinAdvisor application, providing AI-powered financial
 ## Setup
 
 1. Install dependencies:
-
    ```bash
    npm install
    ```
 
-2. Create a `.env` file with the following variables:
+2. Set up MongoDB:
+   - **Option A: MongoDB Atlas (Recommended)**
+     - Go to [MongoDB Atlas](https://www.mongodb.com/atlas)
+     - Create a free account and cluster
+     - Get your connection string from "Connect" > "Connect your application"
+     - It will look like: `mongodb+srv://username:password@cluster.mongodb.net/finadvisor`
 
+   - **Option B: Local MongoDB**
+     - Install MongoDB Community Server
+     - Start MongoDB service
+     - Use connection string: `mongodb://localhost:27017/finadvisor`
+
+3. Create a `.env` file with the following variables:
    ```
    PORT=5000
-   MONGO_URI=mongodb://localhost:27017/finadvisor
+   MONGO_URI=your_mongodb_connection_string_here
    JWT_SECRET=your_jwt_secret_here
    OPENAI_API_KEY=your_openai_api_key_here
    ```
 
-3. Start MongoDB (if using local instance)
-
-4. Run the server:
+4. Start the server:
    ```bash
    npm run dev  # Development mode with nodemon
    npm start    # Production mode
