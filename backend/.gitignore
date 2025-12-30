@@ -1,0 +1,18 @@
+# Secrets and Credentials
+.env
+.env.local
+
+# Dependencies
+node_modules/
+
+# Build folders
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+
+# Operating System files
+.DS_Store
+Thumbs.db
