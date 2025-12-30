@@ -16,7 +16,7 @@ const Login = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-6">Sign in to your account</h3>
             <div className="flex justify-center">
               <a
-                href="http://localhost:5000/api/auth/google"
+                                href="http://localhost:5000/api/auth/google"
                 className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">

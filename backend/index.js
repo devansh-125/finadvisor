@@ -4,10 +4,11 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
-require('./config/passport');
 
 // Load environment variables
 dotenv.config();
+require('./config/passport');
+
 console.log('🔧 Starting FinAdvisor Backend...');
 console.log('📡 MONGO_URI loaded:', process.env.MONGO_URI ? 'Yes' : 'No');
 
@@ -15,10 +16,13 @@ console.log('📡 MONGO_URI loaded:', process.env.MONGO_URI ? 'Yes' : 'No');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json());
 app.use(session({
-  secret: process.env.JWT_SECRET,
+  secret: process.env.JWT_SECRET || 'secret',
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -31,10 +35,7 @@ app.use(passport.session());
 
 // Connect to MongoDB
 console.log('🔗 Attempting MongoDB connection...');
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor', {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 5000,
-})
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor')
 .then(() => {
   console.log('✅ MongoDB connected successfully!');
   console.log('📊 Database: finadvisor');
@@ -42,11 +43,6 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor'
 .catch(err => {
   console.error('❌ MongoDB connection failed!');
   console.error('Error:', err.message);
-  console.log('\n⚠️  Troubleshooting:');
-  console.log('1. Check if you added your IP to MongoDB Atlas Network Access');
-  console.log('2. Verify MONGO_URI in .env file');
-  console.log('3. Ensure MongoDB Atlas cluster is active');
-  process.exit(1);
 });
 
 // Routes
