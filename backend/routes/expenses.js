@@ -5,7 +5,7 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 // Expense categories
-const CATEGORIES = ['food', 'transport', 'entertainment', 'utilities', 'health', 'education', 'other'];
+const CATEGORIES = ['food', 'transport', 'entertainment', 'utilities', 'health', 'education', 'family', 'other'];
 
 // Get all expenses for user
 router.get('/', auth, async (req, res) => {

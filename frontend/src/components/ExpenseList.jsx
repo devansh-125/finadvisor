@@ -19,6 +19,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
     utilities: 'Utilities',
     health: 'Health & Medical',
     education: 'Education',
+    family: 'Family',
     other: 'Other',
   };
 
@@ -29,6 +30,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
     utilities: 'bg-yellow-100 text-yellow-800',
     health: 'bg-red-100 text-red-800',
     education: 'bg-indigo-100 text-indigo-800',
+    family: 'bg-pink-100 text-pink-800',
     other: 'bg-gray-100 text-gray-800',
   };
 
@@ -145,6 +147,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
                     <option value="utilities">Utilities</option>
                     <option value="health">Health & Medical</option>
                     <option value="education">Education</option>
+                    <option value="family">Family</option>
                     <option value="other">Other</option>
                   </select>
                 </div>

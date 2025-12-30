@@ -29,6 +29,7 @@ The dashboard has been transformed into a **3-tab interface** with all features 
      - Utilities
      - Health & Medical
      - Education
+     - Family
      - Other
    - Amount spent in each category (₹)
 
@@ -281,7 +282,7 @@ GET     /recommendations  - Get personalized recommendations
 {
   user: ObjectId (ref: User),
   amount: Number,
-  category: String (enum: ['food', 'transport', 'entertainment', 'utilities', 'health', 'education', 'other']),
+  category: String (enum: ['food', 'transport', 'entertainment', 'utilities', 'health', 'education', 'family', 'other']),
   description: String,
   date: Date,
   createdAt: Date,

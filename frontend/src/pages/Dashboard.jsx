@@ -74,6 +74,7 @@ const Dashboard = () => {
     utilities: 'Utilities',
     health: 'Health & Medical',
     education: 'Education',
+    family: 'Family',
     other: 'Other',
   };
 

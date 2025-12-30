@@ -19,6 +19,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
     { value: 'utilities', label: 'Utilities' },
     { value: 'health', label: 'Health & Medical' },
     { value: 'education', label: 'Education' },
+    { value: 'family', label: 'Family' },
     { value: 'other', label: 'Other' },
   ];
 
