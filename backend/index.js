@@ -2,9 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('passport');
+require('./config/passport');
 
 // Load environment variables
 dotenv.config();
+console.log('🔧 Starting FinAdvisor Backend...');
+console.log('📡 MONGO_URI loaded:', process.env.MONGO_URI ? 'Yes' : 'No');
 
 // Initialize Express app
 const app = express();
@@ -12,11 +17,37 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false, // Set to true if using HTTPS
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor')
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.error('MongoDB connection error:', err));
+console.log('🔗 Attempting MongoDB connection...');
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor', {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 5000,
+})
+.then(() => {
+  console.log('✅ MongoDB connected successfully!');
+  console.log('📊 Database: finadvisor');
+})
+.catch(err => {
+  console.error('❌ MongoDB connection failed!');
+  console.error('Error:', err.message);
+  console.log('\n⚠️  Troubleshooting:');
+  console.log('1. Check if you added your IP to MongoDB Atlas Network Access');
+  console.log('2. Verify MONGO_URI in .env file');
+  console.log('3. Ensure MongoDB Atlas cluster is active');
+  process.exit(1);
+});
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -30,5 +61,6 @@ app.use('/api/ai', aiRoutes);
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`\n🚀 Server running on http://localhost:${PORT}`);
+  console.log('📚 API ready for requests\n');
 });
