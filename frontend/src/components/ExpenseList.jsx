@@ -105,23 +105,23 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
 
   if (expenses.length === 0) {
     return (
-      <div className="bg-white shadow rounded-lg p-8 text-center">
-        <p className="text-gray-500 text-lg">No expenses yet. Add one to get started!</p>
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-8 text-center">
+        <p className="text-gray-500 dark:text-gray-400 text-lg">No expenses yet. Add one to get started!</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+    <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md animate-fade-in">
       {error && (
-        <div className="p-4 bg-red-50 border-b border-red-200">
-          <p className="text-red-800">{error}</p>
+        <div className="p-4 bg-red-50 dark:bg-red-900 border-b border-red-200 dark:border-red-700 animate-slide-in-down">
+          <p className="text-red-800 dark:text-red-200">❌ {error}</p>
         </div>
       )}
 
-      <ul className="divide-y divide-gray-200">
-        {expenses.map(expense => (
-          <li key={expense._id} className="p-4 sm:px-6">
+      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        {expenses.map((expense, index) => (
+          <li key={expense._id} className="p-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slide-in-up smooth-transition" style={{animationDelay: `${index * 0.05}s`}}>
             {editingId === expense._id ? (
               // Edit mode
               <div className="space-y-3">
@@ -133,13 +133,13 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
                     onChange={handleEditChange}
                     step="0.01"
                     min="0"
-                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                   <select
                     name="category"
                     value={editData.category}
                     onChange={handleEditChange}
-                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="food">Food & Dining</option>
                     <option value="transport">Transportation</option>
@@ -156,27 +156,27 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
                   name="date"
                   value={editData.date}
                   onChange={handleEditChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 <textarea
                   name="description"
                   value={editData.description}
                   onChange={handleEditChange}
                   rows="2"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEditSubmit(expense._id)}
                     disabled={loading}
-                    className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+                    className="flex-1 bg-green-600 dark:bg-green-700 text-white py-2 rounded hover:bg-green-700 dark:hover:bg-green-600 disabled:bg-gray-400 dark:disabled:bg-gray-600"
                   >
                     Save
                   </button>
                   <button
                     onClick={handleEditCancel}
                     disabled={loading}
-                    className="flex-1 bg-gray-600 text-white py-2 rounded hover:bg-gray-700 disabled:bg-gray-400"
+                    className="flex-1 bg-gray-600 dark:bg-gray-700 text-white py-2 rounded hover:bg-gray-700 dark:hover:bg-gray-600 disabled:bg-gray-400 dark:disabled:bg-gray-600"
                   >
                     Cancel
                   </button>
@@ -194,23 +194,23 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
                       {new Date(expense.date).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-gray-900 font-medium">{expense.description}</p>
+                  <p className="text-gray-900 dark:text-gray-100 font-medium">{expense.description}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900">{formatCurrency(expense.amount)}</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(expense.amount)}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEditStart(expense)}
-                      className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(expense._id)}
                       disabled={loading}
-                      className="text-red-600 hover:text-red-900 text-sm font-medium disabled:text-gray-400"
+                      className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 text-sm font-medium disabled:text-gray-400 dark:disabled:text-gray-600"
                     >
                       Delete
                     </button>

@@ -66,18 +66,21 @@ const ExpenseForm = ({ onExpenseAdded }) => {
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6 mb-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Expense</h2>
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6 animate-slide-in-up smooth-transition">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <span className="text-2xl mr-2 animate-bounce-gentle">➕</span>
+        Add New Expense
+      </h2>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">{error}</p>
+        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-green-800">{success}</p>
+        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-md">
+          <p className="text-green-800 dark:text-green-200">{success}</p>
         </div>
       )}
 
@@ -85,7 +88,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Amount (₹)
             </label>
             <input
@@ -97,20 +100,20 @@ const ExpenseForm = ({ onExpenseAdded }) => {
               step="0.01"
               min="0"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Category
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
             >
               {categories.map(cat => (
                 <option key={cat.value} value={cat.value}>
@@ -123,7 +126,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
 
         {/* Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Date
           </label>
           <input
@@ -131,13 +134,13 @@ const ExpenseForm = ({ onExpenseAdded }) => {
             name="date"
             value={formData.date}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Description
           </label>
           <textarea
@@ -147,7 +150,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
             placeholder="What did you spend on?"
             required
             rows="3"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
 
@@ -155,9 +158,16 @@ const ExpenseForm = ({ onExpenseAdded }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 transition"
+          className="w-full bg-indigo-600 dark:bg-indigo-700 text-white py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:bg-indigo-400 dark:disabled:bg-indigo-400 transition smooth-transition font-semibold hover:shadow-lg hover:shadow-indigo-500/50 active:scale-95"
         >
-          {loading ? 'Adding...' : 'Add Expense'}
+          {loading ? (
+            <span className="flex items-center justify-center">
+              <span className="inline-block animate-spin mr-2">⚙️</span>
+              Adding...
+            </span>
+          ) : (
+            'Add Expense'
+          )}
         </button>
       </form>
     </div>
