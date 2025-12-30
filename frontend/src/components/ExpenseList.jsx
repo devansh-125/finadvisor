@@ -7,6 +7,11 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Currency formatter
+  const formatCurrency = (amount) => {
+    return `₹${parseFloat(amount).toFixed(2)}`;
+  };
+
   const categoryLabels = {
     food: 'Food & Dining',
     transport: 'Transportation',
@@ -190,7 +195,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900">${parseFloat(expense.amount).toFixed(2)}</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(expense.amount)}</p>
                   </div>
                   <div className="flex gap-2">
                     <button

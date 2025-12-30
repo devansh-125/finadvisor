@@ -3,6 +3,13 @@ const passport = require('passport');
 const User = require('../models/User');
 const router = express.Router();
 
+const auth = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: 'Not authenticated' });
+};
+
 // Google OAuth login
 router.get('/google', 
   passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -31,6 +38,61 @@ router.get('/user', (req, res) => {
     res.json(req.user);
   } else {
     res.status(401).json({ message: 'Not authenticated' });
+  }
+});
+
+// Get user profile
+router.get('/profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profilePicture: user.profilePicture,
+      profile: user.profile
+    });
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update user profile
+router.put('/profile', auth, async (req, res) => {
+  try {
+    const { age, income, savings, goals, currency } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update profile fields
+    if (user.profile) {
+      if (age !== undefined) user.profile.age = age;
+      if (income !== undefined) user.profile.income = income;
+      if (savings !== undefined) user.profile.savings = savings;
+      if (goals !== undefined) user.profile.goals = goals;
+      if (currency !== undefined) user.profile.currency = currency;
+    }
+
+    user.updatedAt = Date.now();
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profilePicture: user.profilePicture,
+      profile: user.profile
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

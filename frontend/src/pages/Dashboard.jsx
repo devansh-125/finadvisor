@@ -4,16 +4,44 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import ExpenseForm from '../components/ExpenseForm';
 import ExpenseList from '../components/ExpenseList';
+import AIChat from '../components/AIChat';
+import Recommendations from '../components/Recommendations';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('expenses');
+  const [userCurrency, setUserCurrency] = useState('INR');
+
+  // Currency formatter helper
+  const formatCurrency = (amount, currency = userCurrency) => {
+    const symbols = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'INR': '₹',
+      'JPY': '¥'
+    };
+    return `${symbols[currency] || '₹'}${parseFloat(amount).toFixed(2)}`;
+  };
 
   useEffect(() => {
     fetchData();
+    fetchUserCurrency();
   }, []);
+
+  const fetchUserCurrency = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/auth/profile', { withCredentials: true });
+      if (response.data.currency) {
+        setUserCurrency(response.data.currency);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user currency:', err);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -87,7 +115,49 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Financial Dashboard</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Financial Dashboard</h2>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 mb-6">
+            <div className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('expenses')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'expenses'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                💰 Expenses & Analytics
+              </button>
+              <button
+                onClick={() => setActiveTab('ai')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'ai'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🤖 AI Financial Advisor
+              </button>
+              <button
+                onClick={() => setActiveTab('recommendations')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'recommendations'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🎯 Recommendations
+              </button>
+            </div>
+          </div>
+
+          {/* Expenses Tab */}
+          {activeTab === 'expenses' && (
+            <>
           
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -102,7 +172,7 @@ const Dashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Expenses</dt>
-                      <dd className="text-lg font-bold text-gray-900">${analytics?.totalAmount?.toFixed(2) || '0.00'}</dd>
+                      <dd className="text-lg font-bold text-gray-900">{formatCurrency(analytics?.totalAmount || 0)}</dd>
                     </dl>
                   </div>
                 </div>
@@ -138,7 +208,7 @@ const Dashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Last 30 Days</dt>
-                      <dd className="text-lg font-bold text-gray-900">${analytics?.last30DaysTotal?.toFixed(2) || '0.00'}</dd>
+                      <dd className="text-lg font-bold text-gray-900">{formatCurrency(analytics?.last30DaysTotal || 0)}</dd>
                     </dl>
                   </div>
                 </div>
@@ -156,7 +226,7 @@ const Dashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Avg Expense</dt>
-                      <dd className="text-lg font-bold text-gray-900">${analytics?.averageExpense?.toFixed(2) || '0.00'}</dd>
+                      <dd className="text-lg font-bold text-gray-900">{formatCurrency(analytics?.averageExpense || 0)}</dd>
                     </dl>
                   </div>
                 </div>
@@ -183,7 +253,7 @@ const Dashboard = () => {
                               }}
                             />
                           </div>
-                          <span className="text-gray-900 font-medium text-right w-20">${amount.toFixed(2)}</span>
+                          <span className="text-gray-900 font-medium text-right w-20">{formatCurrency(amount)}</span>
                         </div>
                       </div>
                     )
@@ -201,7 +271,7 @@ const Dashboard = () => {
                     .map(([month, amount]) => (
                       <div key={month} className="flex justify-between items-center">
                         <span className="text-gray-700">{new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
-                        <span className="text-gray-900 font-medium">${amount.toFixed(2)}</span>
+                        <span className="text-gray-900 font-medium">{formatCurrency(amount)}</span>
                       </div>
                     ))}
                 </div>
@@ -215,6 +285,20 @@ const Dashboard = () => {
           {/* Expense List */}
           <h3 className="text-lg font-semibold text-gray-900 mb-4">All Expenses</h3>
           <ExpenseList expenses={expenses} onExpenseDeleted={handleExpenseDeleted} />
+            </>
+          )}
+
+          {/* AI Chat Tab */}
+          {activeTab === 'ai' && (
+            <div className="bg-white shadow rounded-lg overflow-hidden" style={{ height: '600px' }}>
+              <AIChat />
+            </div>
+          )}
+
+          {/* Recommendations Tab */}
+          {activeTab === 'recommendations' && (
+            <Recommendations />
+          )}
         </div>
       </main>
     </div>
