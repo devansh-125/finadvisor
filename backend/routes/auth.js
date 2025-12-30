@@ -10,15 +10,23 @@ router.get('/google',
 
 // Google OAuth callback
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { failureRedirect: 'http://localhost:5173/login' }),
   (req, res) => {
     // Successful authentication, redirect home
-    res.redirect('http://localhost:5173/dashboard?user=' + req.user._id);
+    console.log('Authentication successful, user:', req.user._id);
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.redirect('http://localhost:5173/login');
+      }
+      res.redirect('http://localhost:5173/dashboard?user=' + req.user._id);
+    });
   }
 );
 
 // Get current user
 router.get('/user', (req, res) => {
+  console.log('GET /user, req.user:', req.user);
   if (req.user) {
     res.json(req.user);
   } else {

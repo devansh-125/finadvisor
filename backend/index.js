@@ -1,3 +1,4 @@
+console.log('🚀 STARTING NODE PROCESS');
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -14,6 +15,14 @@ console.log('📡 MONGO_URI loaded:', process.env.MONGO_URI ? 'Yes' : 'No');
 
 // Initialize Express app
 const app = express();
+
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION:', reason);
+});
 
 // Middleware
 app.use(cors({
@@ -35,14 +44,23 @@ app.use(passport.session());
 
 // Connect to MongoDB
 console.log('🔗 Attempting MongoDB connection...');
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor')
+const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor';
+console.log(`📡 Connecting to: ${mongoURI.includes('localhost') ? 'Localhost' : 'Atlas Cluster'}`);
+
+mongoose.connect(mongoURI, {
+  serverSelectionTimeoutMS: 5000, // Fail after 5 seconds if cannot connect
+  socketTimeoutMS: 45000,
+  family: 4, // Use IPv4, skip IPv6
+})
 .then(() => {
   console.log('✅ MongoDB connected successfully!');
   console.log('📊 Database: finadvisor');
 })
 .catch(err => {
   console.error('❌ MongoDB connection failed!');
-  console.error('Error:', err.message);
+  console.error('Error Name:', err.name);
+  console.error('Error Message:', err.message);
+  if (err.cause) console.error('Error Cause:', err.cause);
 });
 
 // Routes

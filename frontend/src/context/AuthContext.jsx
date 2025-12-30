@@ -15,9 +15,11 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
+      console.log('Fetching user...');
       const res = await axios.get('http://localhost:5000/api/auth/user', {
         withCredentials: true
       });
+      console.log('User fetched:', res.data);
       setUser(res.data);
     } catch (err) {
       console.log('Not authenticated');

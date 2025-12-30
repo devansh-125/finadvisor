@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Dashboard = () => {
@@ -12,7 +13,9 @@ const Dashboard = () => {
 
   const fetchExpenses = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/expenses');
+      const res = await axios.get('http://localhost:5000/api/expenses', {
+        withCredentials: true
+      });
       setExpenses(res.data);
     } catch (err) {
       console.error('Failed to fetch expenses');
@@ -29,8 +32,15 @@ const Dashboard = () => {
             <div className="flex items-center">
               <h1 className="text-xl font-bold text-gray-900">FinAdvisor</h1>
             </div>
-            <div className="flex items-center">
-              <span className="text-gray-700 mr-4">Welcome, {user?.name}</span>
+            <div className="flex items-center space-x-4">
+              <Link to="/profile" className="text-gray-700 hover:text-indigo-600">
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture} alt={user.name} className="h-8 w-8 rounded-full inline mr-2" />
+                ) : (
+                  <span className="mr-2">👤</span>
+                )}
+                {user?.name}
+              </Link>
               <button
                 onClick={logout}
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"

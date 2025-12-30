@@ -1,0 +1,35 @@
+🚀 STARTING NODE PROCESS
+[dotenv@17.2.3] injecting env (6) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+🔧 Starting FinAdvisor Backend...
+📡 MONGO_URI loaded: Yes
+🔗 Attempting MongoDB connection...
+📡 Connecting to: Atlas Cluster
+
+🚀 Server running on http://localhost:5000
+📚 API ready for requests
+
+✅ MongoDB connected successfully!
+📊 Database: finadvisor
+Authentication successful, user: new ObjectId('695374ac7ded150defdc5520')
+GET /user, req.user: {
+  profile: { goals: [], currency: 'USD' },
+  _id: new ObjectId('695374ac7ded150defdc5520'),
+  googleId: '107500789001920935725',
+  name: 'Devansh Chaudhary',
+  email: 'cdevansh913@gmail.com',
+  profilePicture: 'https://lh3.googleusercontent.com/a/ACg8ocKGmO4MiQq6dBRAsS_YlZj2zl1PS-elNg-35Gv1zXNOtsuTSTw=s96-c',
+  createdAt: 2025-12-30T06:43:56.972Z,
+  updatedAt: 2025-12-30T06:43:56.973Z,
+  __v: 0
+}
+GET /user, req.user: {
+  profile: { goals: [], currency: 'USD' },
+  _id: new ObjectId('695374ac7ded150defdc5520'),
+  googleId: '107500789001920935725',
+  name: 'Devansh Chaudhary',
+  email: 'cdevansh913@gmail.com',
+  profilePicture: 'https://lh3.googleusercontent.com/a/ACg8ocKGmO4MiQq6dBRAsS_YlZj2zl1PS-elNg-35Gv1zXNOtsuTSTw=s96-c',
+  createdAt: 2025-12-30T06:43:56.972Z,
+  updatedAt: 2025-12-30T06:43:56.973Z,
+  __v: 0
+}

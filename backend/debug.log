@@ -1,0 +1,12 @@
+🚀 STARTING NODE PROCESS
+[dotenv@17.2.3] injecting env (6) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+🔧 Starting FinAdvisor Backend...
+📡 MONGO_URI loaded: Yes
+🔗 Attempting MongoDB connection...
+📡 Connecting to: Atlas Cluster
+
+🚀 Server running on http://localhost:5000
+📚 API ready for requests
+
+✅ MongoDB connected successfully!
+📊 Database: finadvisor
