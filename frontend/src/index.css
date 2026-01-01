@@ -108,3 +108,135 @@
 .smooth-transition {
   @apply transition-all duration-300 ease-out;
 }
+
+/* Modern Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.5), rgba(99, 102, 241, 0.5));
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.8), rgba(99, 102, 241, 0.8));
+}
+
+/* Dark mode scrollbar */
+.dark::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.dark::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.3));
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(99, 102, 241, 0.6));
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(55, 65, 81, 0.2);
+}
+
+/* 2026 Modern Design Elements */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
+  color-scheme: dark;
+}
+
+body.light {
+  color-scheme: light;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  @apply bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent;
+}
+
+/* Neon glow effect */
+.glow-effect {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.glow-effect-dark {
+  box-shadow: 0 0 20px rgba(34, 197, 254, 0.2);
+}
+
+/* Smooth transitions */
+* {
+  @apply transition-colors duration-300;
+}
+
+button:not(.no-transition) {
+  @apply transition-all duration-200;
+}
+
+/* Fullscreen Mode Styles */
+div:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* WebKit fullscreen */
+div:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Firefox fullscreen */
+div:-moz-full-screen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* IE/Edge fullscreen */
+div:-ms-fullscreen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Hide body scrollbar in fullscreen */
+body:has(div:fullscreen) {
+  overflow: hidden;
+}
+
+/* Alternative for webkit */
+body:has(div:-webkit-full-screen) {
+  overflow: hidden;
+}
+
+/* Smooth fullscreen transition */
+@media (prefers-reduced-motion: no-preference) {
+  div.fixed.inset-0 {
+    animation: fadeIn 0.3s ease-out;
+  }
+}
+
