@@ -57,7 +57,6 @@ app.use(session({
   secret: process.env.JWT_SECRET || 'secret',
   resave: false,
   saveUninitialized: true,
-  // store: MongoStore.create({ mongoUrl: mongoURI }), // Skip for now - causes hang if DB not available
   cookie: {
     secure: false, // Set to true in production with HTTPS
     httpOnly: true,

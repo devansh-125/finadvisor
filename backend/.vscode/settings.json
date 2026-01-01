@@ -1,14 +1,13 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.validate.enable": true,
+  "typescript.validate.enable": false,
+  "typescript.enablePromptUseWorkspaceTsdk": false,
   "typescript.check.skipLibCheck": true,
   "typescript.tsserver.skipLibCheck": true,
-  "typescript.implicitProjectConfig.checkJs": false,
   "files.exclude": {
     "**/node_modules": true,
     "**/.git": true,
-    "**/.vscode": true
+    "**/.vscode": true,
+    "**/tsconfig.json": true
   },
   "search.exclude": {
     "**/node_modules": true,
