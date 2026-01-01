@@ -98,7 +98,7 @@ class TransactionAnalyzer {
       const categoryCount = {};
       allExpenses.forEach(exp => {
         categoryBreakdown[exp.category] = (categoryBreakdown[exp.category] || 0) + exp.amount;
-        categoryTrends[exp.category] = (categoryTrends[exp.category] || 0) + 1;
+        categoryCount[exp.category] = (categoryCount[exp.category] || 0) + 1;
       });
 
       // Calculate averages

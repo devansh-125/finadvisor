@@ -27,21 +27,28 @@ const FinancialAnalytics = () => {
     try {
       // Simple API call for now - will expand later
       const response = await axios.get('http://localhost:5000/api/ai/health-analysis', { withCredentials: true });
+      console.log('📊 [FRONTEND] Full response data:', JSON.stringify(response.data, null, 2));
+      console.log('📊 [FRONTEND] Categories array:', response.data.analysis?.categories);
+      console.log('📊 [FRONTEND] CategoryBreakdown object:', response.data.analysis?.categoryBreakdown);
+      console.log('📊 [FRONTEND] Total spent:', response.data.analysis?.totalSpent);
+      
+      // Verify sorting
+      if (response.data.analysis?.categories) {
+        const cats = response.data.analysis.categories;
+        const breakdown = response.data.analysis.categoryBreakdown;
+        console.log('📊 [FRONTEND] Categories with amounts:');
+        cats.forEach(cat => {
+          const amount = breakdown[cat];
+          const percentage = (response.data.analysis.totalSpent > 0) ? ((amount / response.data.analysis.totalSpent) * 100).toFixed(1) : 0;
+          console.log(`  ${cat}: ₹${amount} (${percentage}%)`);
+        });
+      }
+      
       setData(response.data);
     } catch (err) {
       console.error('Error fetching data:', err);
-      // Provide sample data
-      setData({
-        overallScore: 75,
-        summary: "Sample financial health analysis",
-        kpis: {
-          savingsRate: { rate: 18, status: 'good' },
-          expenseRatio: { ratio: 72, status: 'fair' }
-        },
-        recommendations: [
-          { recommendation: 'Track your expenses regularly', priority: 'high', kpi: 'tracking' }
-        ]
-      });
+      setError('Failed to load financial health analysis. Please try again later.');
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -56,22 +63,8 @@ const FinancialAnalytics = () => {
       setMarketData(response.data);
     } catch (err) {
       console.error('Error fetching market data:', err);
-      // Provide sample market data
-      setMarketData({
-        marketData: {
-          indices: [
-            { symbol: 'SPY', name: 'S&P 500', price: 450.00, change: 2.50, changePercent: 0.56 },
-            { symbol: 'QQQ', name: 'Nasdaq 100', price: 380.00, change: -1.20, changePercent: -0.31 },
-            { symbol: 'IWM', name: 'Russell 2000', price: 180.00, change: 1.80, changePercent: 1.01 }
-          ],
-          economic: { inflation: 3.1, unemployment: 4.1, gdp: 2.3 }
-        },
-        news: [
-          { title: 'Fed Signals Potential Rate Cuts', source: 'Reuters', publishedAt: new Date() },
-          { title: 'Tech Stocks Rally on AI Optimism', source: 'Bloomberg', publishedAt: new Date() }
-        ],
-        exchangeRates: { USD_INR: 83.5, EUR_USD: 1.08 }
-      });
+      setError('Failed to load market data. Please try again later.');
+      setMarketData(null);
     } finally {
       setLoading(false);
     }
@@ -82,6 +75,15 @@ const FinancialAnalytics = () => {
     if (tab === 'market' && !marketData) {
       fetchMarketData();
     }
+  };
+
+  // Helper to safely render numeric values that might be objects
+  const renderSafeValue = (val, fallback = 0) => {
+    if (val === null || val === undefined) return fallback;
+    if (typeof val === 'object') {
+      return val.rate !== undefined ? val.rate : (val.ratio !== undefined ? val.ratio : (val.value !== undefined ? val.value : fallback));
+    }
+    return val;
   };
 
   if (authLoading) {
@@ -150,11 +152,11 @@ const FinancialAnalytics = () => {
                 {/* Main Score Card */}
                 <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg p-8 text-white lg:col-span-1 lg:row-span-2">
                   <h4 className="text-sm font-semibold opacity-90 mb-2">Overall Health Score</h4>
-                  <div className="text-6xl font-bold mb-4">{data.overallScore || 75}</div>
+                  <div className="text-6xl font-bold mb-4">{data.overallScore ?? 0}</div>
                   <div className="w-full bg-blue-300 rounded-full h-3 mb-4">
                     <div
                       className="bg-white rounded-full h-3 transition-all"
-                      style={{ width: `${data.overallScore || 75}%` }}
+                      style={{ width: `${data.overallScore ?? 0}%` }}
                     ></div>
                   </div>
                   <p className="text-sm opacity-90">out of 100</p>
@@ -211,26 +213,26 @@ const FinancialAnalytics = () => {
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm text-gray-600">Savings Rate</span>
-                        <span className="text-sm font-semibold text-gray-900">{data.kpis?.savingsRate?.rate || 15}%</span>
+                        <span className="text-sm font-semibold text-gray-900">{renderSafeValue(data.kpis?.savingsRate?.rate, 0)}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-green-500 rounded-full h-2 transition-all"
-                          style={{ width: `${Math.min(data.kpis?.savingsRate?.rate || 15, 100)}%` }}
+                          style={{ width: `${Math.min(renderSafeValue(data.kpis?.savingsRate?.rate, 0), 100)}%` }}
                         ></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm text-gray-600">Expense Ratio</span>
-                        <span className="text-sm font-semibold text-gray-900">{data.kpis?.expenseRatio?.ratio || 75}%</span>
+                        <span className="text-sm font-semibold text-gray-900">{renderSafeValue(data.kpis?.expenseRatio?.ratio, 0)}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className={`rounded-full h-2 transition-all ${
-                            (data.kpis?.expenseRatio?.ratio || 75) <= 70 ? 'bg-green-500' : 'bg-yellow-500'
+                            renderSafeValue(data.kpis?.expenseRatio?.ratio, 0) <= 70 ? 'bg-green-500' : 'bg-yellow-500'
                           }`}
-                          style={{ width: `${Math.min(data.kpis?.expenseRatio?.ratio || 75, 100)}%` }}
+                          style={{ width: `${Math.min(renderSafeValue(data.kpis?.expenseRatio?.ratio, 0), 100)}%` }}
                         ></div>
                       </div>
                     </div>
@@ -269,23 +271,266 @@ const FinancialAnalytics = () => {
         )}
 
         {activeTab === 'kpis' && (
-          <div className="text-center py-8">
-            <h3 className="text-xl font-semibold mb-4">Key Performance Indicators</h3>
+          <div className="space-y-6">
+            <h3 className="text-2xl font-bold text-gray-900">Key Performance Indicators</h3>
+            
             {loading ? (
-              <p>Loading KPIs...</p>
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4">Loading your KPIs...</p>
+              </div>
+            ) : data ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                {/* Savings Rate */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Savings Rate</h4>
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <div className="text-4xl font-bold text-green-600 mb-2">{renderSafeValue(data.kpis?.savingsRate?.rate, 0)}%</div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {(() => {
+                      const status = data.kpis?.savingsRate?.status;
+                      if (status === 'excellent') return '✓ Excellent';
+                      if (status === 'good') return '• Good';
+                      if (status === 'fair') return '• Fair';
+                      return '✗ Low';
+                    })()}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-green-500 rounded-full h-3 transition-all" 
+                      style={{ width: `${Math.min(renderSafeValue(data.kpis?.savingsRate?.rate, 0), 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Expense Ratio */}
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg border border-orange-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Expense Ratio</h4>
+                    <span className="text-2xl">📊</span>
+                  </div>
+                  <div className="text-4xl font-bold text-orange-600 mb-2">{renderSafeValue(data.kpis?.expenseRatio?.ratio, 0)}%</div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {(() => {
+                      const status = data.kpis?.expenseRatio?.status;
+                      if (status === 'excellent' || status === 'healthy') return '✓ Healthy';
+                      if (status === 'good') return '✓ Good';
+                      if (status === 'fair' || status === 'moderate') return '• Moderate';
+                      return '✗ High';
+                    })()}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-orange-500 rounded-full h-3 transition-all" 
+                      style={{ width: `${Math.min(renderSafeValue(data.kpis?.expenseRatio?.ratio, 0), 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Monthly Spending */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Monthly Avg</h4>
+                    <span className="text-2xl">📈</span>
+                  </div>
+                  <div className="text-4xl font-bold text-blue-600 mb-2">₹{(data.analysis?.totalSpent || 0).toLocaleString('en-IN')}</div>
+                  <p className="text-sm text-gray-600 mb-4">Total spending</p>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-500 rounded-full h-3" 
+                      style={{ width: `${Math.min((renderSafeValue(data.kpis?.expenseRatio?.ratio, 0)), 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Health Score */}
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Health Score</h4>
+                    <span className="text-2xl">❤️</span>
+                  </div>
+                  <div className="text-4xl font-bold text-purple-600 mb-2">{data.overallScore ?? 0}</div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {data.overallScore >= 80 ? '✓ Excellent' : data.overallScore >= 60 ? '• Good' : '✗ Needs Work'}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-purple-500 rounded-full h-3 transition-all" 
+                      style={{ width: `${Math.min(data.overallScore ?? 0, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Top Spending Category */}
+                {data.analysis?.categories?.length > 0 && (
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-semibold text-gray-900">Top Category</h4>
+                      <span className="text-2xl">🏆</span>
+                    </div>
+                    <div className="text-3xl font-bold text-red-600 mb-2 capitalize">
+                      {data.analysis.categories[0]}
+                    </div>
+                    <div className="text-2xl font-semibold text-gray-800 mb-2">
+                      ₹{(data.analysis.categoryBreakdown?.[data.analysis.categories[0]] || 0).toLocaleString('en-IN')}
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {((data.analysis.categoryBreakdown?.[data.analysis.categories[0]] || 0) / data.analysis.totalSpent * 100).toFixed(1)}% of spending
+                    </p>
+                  </div>
+                )}
+
+                {/* Category Count */}
+                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-lg border border-indigo-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Categories</h4>
+                    <span className="text-2xl">📂</span>
+                  </div>
+                  <div className="text-4xl font-bold text-indigo-600 mb-2">
+                    {data.analysis?.categories?.length || 0}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">Active categories (by spending)</p>
+                  <div className="text-xs text-gray-500 space-y-2">
+                    {data.analysis?.categories && data.analysis.categories.length > 0 ? (
+                      data.analysis.categories.slice(0, 5).map((cat) => {
+                        const amount = data.analysis.categoryBreakdown?.[cat] || 0;
+                        const percentage = data.analysis.totalSpent > 0 
+                          ? ((amount / data.analysis.totalSpent) * 100).toFixed(1)
+                          : 0;
+                        return (
+                          <div key={cat} className="flex justify-between items-center capitalize bg-white bg-opacity-50 p-2 rounded">
+                            <span className="font-medium text-gray-700">{cat}</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-600">₹{amount.toLocaleString('en-IN')}</span>
+                              <span className="text-indigo-600 font-semibold">({percentage}%)</span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-gray-500">No categories available</p>
+                    )}
+                  </div>
+                </div>
+
+              </div>
             ) : (
-              <p>KPIs will be displayed here</p>
+              <p className="text-center text-gray-600">No KPI data available</p>
             )}
           </div>
         )}
 
         {activeTab === 'recommendations' && (
-          <div className="text-center py-8">
-            <h3 className="text-xl font-semibold mb-4">Personalized Recommendations</h3>
+          <div className="space-y-6">
+            <h3 className="text-2xl font-bold text-gray-900">Personalized Recommendations</h3>
+            
             {loading ? (
-              <p>Loading recommendations...</p>
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4">Loading recommendations...</p>
+              </div>
+            ) : data ? (
+              <div className="space-y-6">
+                
+                {/* Alerts Section */}
+                {data.alerts && data.alerts.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900">⚠️ Alerts</h4>
+                    <div className="space-y-3">
+                      {data.alerts.map((alert, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`p-4 rounded-lg border-l-4 ${
+                            alert.severity === 'high' 
+                              ? 'bg-red-50 border-red-400 text-red-800'
+                              : alert.severity === 'medium'
+                              ? 'bg-orange-50 border-orange-400 text-orange-800'
+                              : 'bg-yellow-50 border-yellow-400 text-yellow-800'
+                          }`}
+                        >
+                          <h5 className="font-semibold mb-1">
+                            {alert.type?.replace(/_/g, ' ') || 'Alert'}
+                          </h5>
+                          <p className="text-sm">{alert.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Main Recommendations */}
+                {data.recommendations && data.recommendations.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900">💡 Actionable Recommendations</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {data.recommendations.map((rec, idx) => (
+                        <div 
+                          key={idx}
+                          className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="text-3xl">
+                              {rec.priority === 'high' ? '🔴' : rec.priority === 'medium' ? '🟡' : '🟢'}
+                            </div>
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-gray-900 mb-2">{idx + 1}. {rec.title}</h5>
+                              <p className="text-sm text-gray-700 mb-3">{rec.description}</p>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                                  rec.priority === 'high' 
+                                    ? 'bg-red-200 text-red-800'
+                                    : rec.priority === 'medium'
+                                    ? 'bg-orange-200 text-orange-800'
+                                    : 'bg-green-200 text-green-800'
+                                }`}>
+                                  {rec.priority?.toUpperCase() || 'MEDIUM'} PRIORITY
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Insights Section */}
+                {data.insights && data.insights.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900">📊 Financial Insights</h4>
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200 space-y-3">
+                      {data.insights.map((insight, idx) => (
+                        <div key={idx} className="flex items-start gap-3">
+                          <span className="text-green-600 text-xl">✓</span>
+                          <p className="text-gray-800">{insight}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary Recommendations */}
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-lg border border-purple-200">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">📋 Summary</h4>
+                  <div className="space-y-3 text-gray-800">
+                    <p>
+                      <span className="font-semibold">Overall Assessment:</span> {data.summary}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Health Score:</span> {data.overallScore ?? 0}/100
+                    </p>
+                    <p>
+                      <span className="font-semibold">Next Steps:</span> Focus on the high-priority recommendations above to improve your financial health score.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
             ) : (
-              <p>Recommendations will be displayed here</p>
+              <p className="text-center text-gray-600">No recommendations available</p>
             )}
           </div>
         )}
@@ -369,19 +614,19 @@ const FinancialAnalytics = () => {
                       <>
                         <div className="flex justify-between">
                           <span className="text-gray-600">USD/INR</span>
-                          <span className="font-semibold">₹{(marketData.exchangeRates.rates.INR || 83.5).toFixed(2)}</span>
+                          <span className="font-semibold">₹{(marketData.exchangeRates.rates.INR ?? 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">EUR/USD</span>
-                          <span className="font-semibold">${(marketData.exchangeRates.rates.EUR || 0.92).toFixed(2)}</span>
+                          <span className="font-semibold">${(marketData.exchangeRates.rates.EUR ?? 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">GBP/USD</span>
-                          <span className="font-semibold">${(marketData.exchangeRates.rates.GBP || 0.79).toFixed(2)}</span>
+                          <span className="font-semibold">${(marketData.exchangeRates.rates.GBP ?? 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">JPY/USD</span>
-                          <span className="font-semibold">¥{(marketData.exchangeRates.rates.JPY || 156.7).toFixed(2)}</span>
+                          <span className="font-semibold">¥{(marketData.exchangeRates.rates.JPY ?? 0).toFixed(2)}</span>
                         </div>
                       </>
                     ) : (

@@ -490,31 +490,16 @@ class FinancialDataService {
    */
   getFallbackMarketData() {
     return {
-      indices: [
-        { symbol: 'SPY', name: 'S&P 500', price: 450.0, change: 2.5, changePercent: 0.56 },
-        { symbol: 'QQQ', name: 'Nasdaq 100', price: 380.0, change: -1.2, changePercent: -0.31 }
-      ],
-      economic: {
-        inflation: { value: 3.1, change: 0.2, unit: '%' },
-        unemployment: { value: 3.7, change: -0.1, unit: '%' }
-      },
+      indices: [],
+      economic: {},
       timestamp: new Date(),
-      source: 'fallback_data'
+      source: 'no_data_available'
     };
   }
 
   getFallbackNews() {
     return {
-      news: [
-        {
-          title: 'Understanding Budgeting: A Complete Guide',
-          description: 'Learn how to create and maintain a budget that works for your lifestyle.',
-          url: '#',
-          source: 'Financial Education',
-          publishedAt: new Date().toISOString(),
-          relevance: 8
-        }
-      ],
+      news: [],
       timestamp: new Date()
     };
   }

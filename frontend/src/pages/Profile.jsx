@@ -12,13 +12,25 @@ const Profile = () => {
     income: '',
     savings: '',
     goals: [],
-    currency: 'USD'
+    currency: 'INR'
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [goalError, setGoalError] = useState('');
   const [newGoal, setNewGoal] = useState('');
+
+  // Currency symbols mapping
+  const currencySymbols = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    INR: '₹',
+    JPY: '¥'
+  };
+
+  const getCurrencySymbol = () => currencySymbols[formData.currency] || formData.currency;
 
   useEffect(() => {
     fetchProfile();
@@ -36,7 +48,7 @@ const Profile = () => {
         income: res.data.profile?.income || '',
         savings: res.data.profile?.savings || '',
         goals: res.data.profile?.goals || [],
-        currency: res.data.profile?.currency || 'USD'
+        currency: res.data.profile?.currency || 'INR'
       });
     } catch (err) {
       console.error('Failed to fetch profile:', err);
@@ -56,13 +68,24 @@ const Profile = () => {
   };
 
   const handleAddGoal = () => {
-    if (newGoal.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        goals: [...prev.goals, newGoal.trim()]
-      }));
-      setNewGoal('');
+    setGoalError('');
+    if (!newGoal.trim()) {
+      setGoalError('Please enter a financial goal');
+      return;
     }
+    if (newGoal.trim().length < 3) {
+      setGoalError('Goal must be at least 3 characters long');
+      return;
+    }
+    if (formData.goals.includes(newGoal.trim())) {
+      setGoalError('This goal already exists');
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      goals: [...prev.goals, newGoal.trim()]
+    }));
+    setNewGoal('');
   };
 
   const handleRemoveGoal = (index) => {
@@ -179,8 +202,9 @@ const Profile = () => {
                     placeholder="Enter your age"
                     min="0"
                     max="150"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Optional</p>
                 </div>
 
                 {/* Currency */}
@@ -192,12 +216,12 @@ const Profile = () => {
                     name="currency"
                     value={formData.currency}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
                   >
+                    <option value="INR">Indian Rupee (₹)</option>
                     <option value="USD">US Dollar ($)</option>
                     <option value="EUR">Euro (€)</option>
                     <option value="GBP">British Pound (£)</option>
-                    <option value="INR">Indian Rupee (₹)</option>
                     <option value="JPY">Japanese Yen (¥)</option>
                   </select>
                 </div>
@@ -212,94 +236,130 @@ const Profile = () => {
                 {/* Income */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Annual Income ({formData.currency})
+                    Annual Income
                   </label>
-                  <input
-                    type="number"
-                    name="income"
-                    value={formData.income}
-                    onChange={handleChange}
-                    placeholder="0.00"
-                    step="1000"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-gray-600 font-semibold text-lg">
+                      {getCurrencySymbol()}
+                    </span>
+                    <input
+                      type="number"
+                      name="income"
+                      value={formData.income}
+                      onChange={handleChange}
+                      placeholder="0.00"
+                      step="1000"
+                      min="0"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Your yearly income</p>
                 </div>
 
                 {/* Savings */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Savings ({formData.currency})
+                    Current Savings
                   </label>
-                  <input
-                    type="number"
-                    name="savings"
-                    value={formData.savings}
-                    onChange={handleChange}
-                    placeholder="0.00"
-                    step="1000"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-gray-600 font-semibold text-lg">
+                      {getCurrencySymbol()}
+                    </span>
+                    <input
+                      type="number"
+                      name="savings"
+                      value={formData.savings}
+                      onChange={handleChange}
+                      placeholder="0.00"
+                      step="1000"
+                      min="0"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Amount saved</p>
                 </div>
               </div>
             </div>
 
             {/* Financial Goals Section */}
             <div className="border-t pt-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Goals</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">💡 Financial Goals</h2>
               
               <div className="space-y-4">
                 {/* Add Goal */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newGoal}
-                    onChange={(e) => setNewGoal(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
-                    placeholder="Add a financial goal (e.g., Buy a house, Save for retirement)"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddGoal}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  >
-                    Add
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newGoal}
+                      onChange={(e) => setNewGoal(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
+                      placeholder="e.g., Buy a house, Save for retirement, Build emergency fund"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddGoal}
+                      className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {goalError && (
+                    <p className="text-sm text-red-600">{goalError}</p>
+                  )}
                 </div>
 
                 {/* Goals List */}
-                {formData.goals.length > 0 && (
+                {formData.goals.length > 0 ? (
                   <div className="space-y-2">
+                    <p className="text-sm text-gray-600 font-medium">Your Goals ({formData.goals.length})</p>
                     {formData.goals.map((goal, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                        <span className="text-gray-700">• {goal}</span>
+                      <div key={index} className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-100 hover:shadow-md transition">
+                        <div className="flex items-center gap-3">
+                          <span className="text-indigo-600 text-lg">🎯</span>
+                          <span className="text-gray-800 font-medium">{goal}</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveGoal(index)}
-                          className="text-red-600 hover:text-red-900 text-sm font-medium"
+                          className="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1 hover:bg-red-50 rounded transition"
                         >
-                          Remove
+                          ✕ Remove
                         </button>
                       </div>
                     ))}
                   </div>
-                )}
-                {formData.goals.length === 0 && (
-                  <p className="text-gray-500 text-sm">No goals added yet. Add one to get started!</p>
+                ) : (
+                  <p className="text-gray-500 text-sm py-4 text-center">No goals added yet. Add one to get started! 🚀</p>
                 )}
               </div>
             </div>
 
             {/* Submit Button */}
-            <div className="border-t pt-6">
+            <div className="border-t pt-6 flex gap-3">
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 font-medium transition"
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed font-medium transition flex items-center justify-center gap-2"
               >
-                {saving ? 'Saving...' : 'Save Profile'}
+                {saving ? (
+                  <>
+                    <span className="inline-block animate-spin">⏳</span>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    💾 Save Profile
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-medium transition"
+              >
+                Cancel
               </button>
             </div>
           </form>
