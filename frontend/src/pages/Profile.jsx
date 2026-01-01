@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Profile = () => {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
@@ -117,36 +119,92 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+      <div className={`min-h-screen flex items-center justify-center transition-colors ${
+        isDark 
+          ? 'bg-gradient-to-br from-slate-900 to-slate-800' 
+          : 'bg-gradient-to-br from-slate-50 to-blue-50'
+      }`}>
+        <div className="text-center">
+          <div className={`w-12 h-12 rounded-full border-4 border-t-blue-500 animate-spin mx-auto mb-4 ${
+            isDark ? 'border-slate-700' : 'border-slate-200'
+          }`}></div>
+          <p className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading profile...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className={`min-h-screen transition-colors ${
+      isDark 
+        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
+        : 'bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100'
+    }`}>
+      {/* Header/Navbar */}
+      <nav className={`backdrop-blur-md border-b transition-all ${
+        isDark
+          ? 'bg-slate-900/50 border-slate-700/30'
+          : 'bg-white/50 border-slate-200/30'
+      } sticky top-0 z-40 shadow-lg`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo & Links */}
             <div className="flex items-center gap-8">
-              <Link to="/dashboard" className="text-xl font-bold text-gray-900 hover:text-indigo-600">
+              <Link 
+                to="/dashboard" 
+                className={`text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent hover:opacity-80 transition`}
+              >
                 FinAdvisor
               </Link>
-              <Link to="/dashboard" className="text-gray-700 hover:text-indigo-600">
+              <Link 
+                to="/dashboard" 
+                className={`font-medium transition hover:scale-105 ${
+                  isDark 
+                    ? 'text-slate-300 hover:text-cyan-400' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Dashboard
               </Link>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center gap-2">
+
+            {/* User Info & Controls */}
+            <div className="flex items-center gap-4">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg transition-all hover:scale-110 ${
+                  isDark
+                    ? 'bg-blue-900/50 hover:bg-blue-800/70 text-yellow-300'
+                    : 'bg-white/30 hover:bg-white/50 text-gray-700'
+                }`}
+                title={isDark ? 'Light Mode' : 'Dark Mode'}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
+
+              {/* User Profile */}
+              <div className={`flex items-center gap-3 px-4 py-2 rounded-lg ${
+                isDark 
+                  ? 'bg-slate-800/50 border border-slate-700/30' 
+                  : 'bg-white/50 border border-slate-200'
+              }`}>
                 {user?.profilePicture && (
-                  <img src={user.profilePicture} alt={user?.name} className="h-8 w-8 rounded-full" />
+                  <img 
+                    src={user.profilePicture} 
+                    alt={user?.name} 
+                    className="h-8 w-8 rounded-full border-2 border-blue-500" 
+                  />
                 )}
-                <span className="text-gray-700">{user?.name}</span>
+                <span className={`font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                  {user?.name}
+                </span>
               </div>
+
+              {/* Logout Button */}
               <button
                 onClick={logout}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all hover:shadow-lg"
               >
                 Logout
               </button>
@@ -155,43 +213,89 @@ const Profile = () => {
         </div>
       </nav>
 
-      <main className="max-w-2xl mx-auto py-12 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg">
-          {/* Profile Header */}
-          <div className="px-6 py-8 border-b border-gray-200">
-            <div className="flex items-center gap-6">
-              {user?.profilePicture && (
-                <img src={user.profilePicture} alt={user?.name} className="h-16 w-16 rounded-full" />
-              )}
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Profile Header Card */}
+        <div className={`rounded-2xl backdrop-blur-sm transition-all mb-8 ${
+          isDark
+            ? 'bg-gradient-to-r from-slate-800/50 to-slate-700/50 border border-slate-600/30 shadow-2xl'
+            : 'bg-white/70 border border-slate-200 shadow-lg'
+        }`}>
+          <div className="px-8 py-8">
+            <div className="flex items-center gap-6 mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full blur opacity-75 animate-pulse"></div>
+                {user?.profilePicture ? (
+                  <img 
+                    src={user.profilePicture} 
+                    alt={user?.name} 
+                    className="relative h-24 w-24 rounded-full border-4 border-white shadow-lg"
+                  />
+                ) : (
+                  <div className="relative h-24 w-24 rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                    {user?.name?.charAt(0)}
+                  </div>
+                )}
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{user?.name}</h1>
-                <p className="text-gray-500">{user?.email}</p>
+                <h1 className={`text-3xl font-bold mb-2 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {user?.name}
+                </h1>
+                <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                  {user?.email}
+                </p>
+                <div className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                  ✓ Account verified
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="px-6 py-8 space-y-6">
+        {/* Form Card */}
+        <form onSubmit={handleSubmit} className={`rounded-2xl backdrop-blur-sm transition-all overflow-hidden ${
+          isDark
+            ? 'bg-gradient-to-br from-slate-800/50 to-slate-700/50 border border-slate-600/30 shadow-2xl'
+            : 'bg-white/70 border border-slate-200 shadow-lg'
+        }`}>
+          <div className="px-8 py-8 space-y-8">
+            {/* Alert Messages */}
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-800">{error}</p>
+              <div className={`p-4 rounded-xl border-l-4 backdrop-blur-sm transition-all ${
+                isDark
+                  ? 'bg-red-900/30 border-red-700/50 text-red-300'
+                  : 'bg-red-50 border-red-500 text-red-700'
+              }`}>
+                <p className="font-medium">❌ {error}</p>
               </div>
             )}
 
             {success && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-green-800">{success}</p>
+              <div className={`p-4 rounded-xl border-l-4 backdrop-blur-sm transition-all ${
+                isDark
+                  ? 'bg-green-900/30 border-green-700/50 text-green-300'
+                  : 'bg-green-50 border-green-500 text-green-700'
+              }`}>
+                <p className="font-medium">✓ {success}</p>
               </div>
             )}
 
             {/* Personal Information Section */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
+            <section>
+              <h2 className={`text-2xl font-bold mb-6 flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                👤 Personal Information
+              </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Age */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Age
                   </label>
                   <input
@@ -202,21 +306,33 @@ const Profile = () => {
                     placeholder="Enter your age"
                     min="0"
                     max="150"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    className={`w-full px-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2 ${
+                      isDark
+                        ? 'bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:ring-cyan-500'
+                        : 'bg-white/50 border border-slate-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                    }`}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Optional</p>
+                  <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    Optional
+                  </p>
                 </div>
 
                 {/* Currency */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Preferred Currency
                   </label>
                   <select
                     name="currency"
                     value={formData.currency}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    className={`w-full px-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2 ${
+                      isDark
+                        ? 'bg-slate-700/50 border border-slate-600/50 text-white focus:ring-cyan-500'
+                        : 'bg-white/50 border border-slate-300 text-gray-900 focus:ring-blue-500'
+                    }`}
                   >
                     <option value="INR">Indian Rupee (₹)</option>
                     <option value="USD">US Dollar ($)</option>
@@ -226,20 +342,31 @@ const Profile = () => {
                   </select>
                 </div>
               </div>
-            </div>
+            </section>
+
+            {/* Divider */}
+            <div className={`border-t ${isDark ? 'border-slate-600/30' : 'border-slate-200'}`}></div>
 
             {/* Financial Information Section */}
-            <div className="border-t pt-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Information</h2>
+            <section>
+              <h2 className={`text-2xl font-bold mb-6 flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                💰 Financial Information
+              </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Income */}
+                {/* Annual Income */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Annual Income
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-gray-600 font-semibold text-lg">
+                    <span className={`absolute left-4 top-3 text-lg font-bold ${
+                      isDark ? 'text-cyan-400' : 'text-blue-600'
+                    }`}>
                       {getCurrencySymbol()}
                     </span>
                     <input
@@ -250,19 +377,29 @@ const Profile = () => {
                       placeholder="0.00"
                       step="1000"
                       min="0"
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className={`w-full pl-10 pr-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2 ${
+                        isDark
+                          ? 'bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:ring-cyan-500'
+                          : 'bg-white/50 border border-slate-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                      }`}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Your yearly income</p>
+                  <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    Your yearly income
+                  </p>
                 </div>
 
-                {/* Savings */}
+                {/* Current Savings */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Current Savings
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-gray-600 font-semibold text-lg">
+                    <span className={`absolute left-4 top-3 text-lg font-bold ${
+                      isDark ? 'text-cyan-400' : 'text-blue-600'
+                    }`}>
                       {getCurrencySymbol()}
                     </span>
                     <input
@@ -273,57 +410,93 @@ const Profile = () => {
                       placeholder="0.00"
                       step="1000"
                       min="0"
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className={`w-full pl-10 pr-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2 ${
+                        isDark
+                          ? 'bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:ring-cyan-500'
+                          : 'bg-white/50 border border-slate-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                      }`}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Amount saved</p>
+                  <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    Amount saved
+                  </p>
                 </div>
               </div>
-            </div>
+            </section>
+
+            {/* Divider */}
+            <div className={`border-t ${isDark ? 'border-slate-600/30' : 'border-slate-200'}`}></div>
 
             {/* Financial Goals Section */}
-            <div className="border-t pt-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">💡 Financial Goals</h2>
+            <section>
+              <h2 className={`text-2xl font-bold mb-6 flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                🎯 Financial Goals
+              </h2>
               
               <div className="space-y-4">
                 {/* Add Goal */}
-                <div className="space-y-2">
-                  <div className="flex gap-2">
+                <div className="space-y-3">
+                  <div className="flex gap-3">
                     <input
                       type="text"
                       value={newGoal}
                       onChange={(e) => setNewGoal(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
                       placeholder="e.g., Buy a house, Save for retirement, Build emergency fund"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className={`flex-1 px-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2 ${
+                        isDark
+                          ? 'bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:ring-cyan-500'
+                          : 'bg-white/50 border border-slate-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                      }`}
                     />
                     <button
                       type="button"
                       onClick={handleAddGoal}
-                      className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition font-medium"
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-all hover:shadow-lg"
                     >
-                      Add
+                      ➕ Add
                     </button>
                   </div>
                   {goalError && (
-                    <p className="text-sm text-red-600">{goalError}</p>
+                    <p className="text-sm text-red-500 font-medium">{goalError}</p>
                   )}
                 </div>
 
                 {/* Goals List */}
                 {formData.goals.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600 font-medium">Your Goals ({formData.goals.length})</p>
+                  <div className="space-y-3 mt-6">
+                    <p className={`text-sm font-semibold ${
+                      isDark ? 'text-slate-300' : 'text-gray-600'
+                    }`}>
+                      Your Goals ({formData.goals.length})
+                    </p>
                     {formData.goals.map((goal, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-100 hover:shadow-md transition">
+                      <div 
+                        key={index} 
+                        className={`flex items-center justify-between p-4 rounded-xl transition-all hover:shadow-lg ${
+                          isDark
+                            ? 'bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-700/30 hover:border-blue-600/50'
+                            : 'bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 hover:border-blue-300'
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
-                          <span className="text-indigo-600 text-lg">🎯</span>
-                          <span className="text-gray-800 font-medium">{goal}</span>
+                          <span className="text-2xl">🎯</span>
+                          <span className={`font-medium ${
+                            isDark ? 'text-slate-100' : 'text-gray-800'
+                          }`}>
+                            {goal}
+                          </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveGoal(index)}
-                          className="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1 hover:bg-red-50 rounded transition"
+                          className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                            isDark
+                              ? 'text-red-400 hover:bg-red-900/30 hover:text-red-300'
+                              : 'text-red-600 hover:bg-red-100 hover:text-red-700'
+                          }`}
                         >
                           ✕ Remove
                         </button>
@@ -331,17 +504,28 @@ const Profile = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm py-4 text-center">No goals added yet. Add one to get started! 🚀</p>
+                  <div className={`text-center py-8 rounded-xl ${
+                    isDark 
+                      ? 'bg-slate-700/30 border border-slate-600/30' 
+                      : 'bg-slate-100/50 border border-slate-200'
+                  }`}>
+                    <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                      No goals added yet. Add one to get started! 🚀
+                    </p>
+                  </div>
                 )}
               </div>
-            </div>
+            </section>
 
-            {/* Submit Button */}
-            <div className="border-t pt-6 flex gap-3">
+            {/* Divider */}
+            <div className={`border-t ${isDark ? 'border-slate-600/30' : 'border-slate-200'}`}></div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed font-medium transition flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:from-slate-500 disabled:to-slate-600 text-white py-3 rounded-lg font-semibold transition-all hover:shadow-lg disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>
@@ -357,13 +541,17 @@ const Profile = () => {
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-medium transition"
+                className={`px-8 py-3 rounded-lg font-semibold transition-all ${
+                  isDark
+                    ? 'bg-slate-700/50 hover:bg-slate-600 text-slate-100 border border-slate-600/50'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                }`}
               >
                 Cancel
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </main>
     </div>
   );
