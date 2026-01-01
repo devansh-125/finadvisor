@@ -40,7 +40,7 @@ const AIChat = () => {
 
     try {
       // Send question to AI backend
-      const response = await axios.post('/api/ai/query', 
+      const response = await axios.post('http://localhost:5000/api/ai/query',
         { question: input },
         { withCredentials: true }
       );
@@ -117,13 +117,30 @@ const AIChat = () => {
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
 
-              {/* Show spending metadata for AI responses */}
+              {/* Show enhanced metadata for AI responses */}
               {message.metadata && (
                 <div className="mt-3 pt-3 border-t border-gray-200 text-xs space-y-1">
-                  <p><strong>Spending Summary:</strong></p>
-                  <p>• Total Expenses: ₹{message.metadata.totalSpent}</p>
+                  <p><strong>Financial Overview:</strong></p>
+                  <p>• Total Spent: ₹{message.metadata.totalSpent}</p>
                   <p>• Last 30 Days: ₹{message.metadata.last30Days}</p>
                   <p>• Top Category: {message.metadata.topCategory}</p>
+                  {message.metadata.healthScore && (
+                    <p>• Health Score: {message.metadata.healthScore}/100</p>
+                  )}
+                  {message.metadata.alerts > 0 && (
+                    <p>• Active Alerts: {message.metadata.alerts}</p>
+                  )}
+                  {message.metadata.kpis && (
+                    <div className="mt-2">
+                      <p><strong>Key Metrics:</strong></p>
+                      <p>• Savings Rate: {message.metadata.kpis.savingsRate?.rate}%</p>
+                      <p>• Expense Ratio: {message.metadata.kpis.expenseRatio?.ratio}%</p>
+                      <p>• Risk Score: {message.metadata.kpis.riskScore}/100</p>
+                    </div>
+                  )}
+                  {message.metadata.model && (
+                    <p className="text-gray-500 mt-1">AI Model: {message.metadata.model}</p>
+                  )}
                 </div>
               )}
             </div>

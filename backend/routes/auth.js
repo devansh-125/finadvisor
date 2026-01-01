@@ -17,26 +17,82 @@ router.get('/google',
 
 // Google OAuth callback
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:5173/login' }),
+  (req, res, next) => {
+    console.log('🔵 Google OAuth callback received');
+    console.log('Query params:', req.query);
+    console.log('Session ID:', req.sessionID);
+    console.log('Has session:', !!req.session);
+    next();
+  },
+  passport.authenticate('google', { 
+    failureRedirect: 'http://localhost:5173/login?error=auth_failed',
+    session: true
+  }),
   (req, res) => {
-    // Successful authentication, redirect home
-    console.log('Authentication successful, user:', req.user._id);
+    // passport.authenticate already calls req.login() automatically on success
+    console.log('✅ Passport authentication successful');
+    console.log('User ID:', req.user?._id);
+    console.log('User Email:', req.user?.email);
+    console.log('Session ID:', req.sessionID);
+    console.log('Is authenticated:', req.isAuthenticated());
+    console.log('Session passport user:', req.session?.passport?.user);
+    
+    if (!req.user) {
+      console.error('❌ No user found after authentication');
+      return res.redirect('http://localhost:5173/login?error=no_user');
+    }
+
+    if (!req.isAuthenticated()) {
+      console.error('❌ User not authenticated after passport.authenticate');
+      return res.redirect('http://localhost:5173/login?error=not_authenticated');
+    }
+
+    // Ensure session is persisted
+    req.session.userId = req.user._id.toString();
     req.session.save((err) => {
       if (err) {
-        console.error('Session save error:', err);
-        return res.redirect('http://localhost:5173/login');
+        console.error('❌ Session save error:', err);
+        return res.redirect('http://localhost:5173/login?error=session_error');
       }
-      res.redirect('http://localhost:5173/dashboard?user=' + req.user._id);
+      
+      console.log('✅ Session saved successfully');
+      console.log('Session ID:', req.sessionID);
+      console.log('Session passport user:', req.session.passport?.user);
+      console.log('Session cookie config:', {
+        maxAge: req.session.cookie.maxAge,
+        httpOnly: req.session.cookie.httpOnly,
+        secure: req.session.cookie.secure,
+        sameSite: req.session.cookie.sameSite,
+        path: req.session.cookie.path,
+        domain: req.session.cookie.domain
+      });
+      
+      const redirectUrl = 'http://localhost:5173/dashboard?user=' + req.user._id;
+      console.log('🔄 Redirecting to:', redirectUrl);
+      
+      // Check if cookie will be set
+      const cookieHeader = res.getHeader('Set-Cookie');
+      console.log('🍪 Set-Cookie header:', cookieHeader);
+      
+      res.redirect(redirectUrl);
     });
   }
 );
 
 // Get current user
 router.get('/user', (req, res) => {
-  console.log('GET /user, req.user:', req.user);
+  console.log('🔍 GET /user called');
+  console.log('Session ID:', req.sessionID);
+  console.log('Session:', req.session);
+  console.log('req.user:', req.user);
+  console.log('req.isAuthenticated():', req.isAuthenticated());
+  console.log('Cookies:', req.headers.cookie);
+  
   if (req.user) {
+    console.log('✅ User found, sending user data');
     res.json(req.user);
   } else {
+    console.log('❌ No user found, returning 401');
     res.status(401).json({ message: 'Not authenticated' });
   }
 });
