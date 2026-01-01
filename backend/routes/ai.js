@@ -5,14 +5,13 @@ const Expense = require('../models/Expense');
 const User = require('../models/User');
 const TransactionAnalyzer = require('../services/transactionAnalyzer');
 const RuleEngine = require('../services/ruleEngine');
-const { getAdvancedAIService } = require('../services/advancedAIService');
+const { getOpenAIService } = require('../services/openaiService');
 const FinancialAnalytics = require('../services/financialAnalytics');
 const FinancialDataService = require('../services/financialDataService');
-const { performSemanticAnalysis } = require('../services/semanticAnalysis');
 
 
 
-// AI Query endpoint with semantic analysis
+// AI Query endpoint using OpenAI API
 router.post('/query', async (req, res) => {
   console.log('🔍 ===== QUERY ENDPOINT CALLED =====');
   console.log('🔍 Question received:', req.body.question);
@@ -47,13 +46,12 @@ router.post('/query', async (req, res) => {
     console.log('🔍 Transaction analysis completed');
 
     // Apply financial rules
-    const ruleEngine = new RuleEngine();
-    const rules = await ruleEngine.applyRules(analysis, req.user);
+    const rules = RuleEngine.applyRules(analysis);
     console.log('🔍 Rule engine applied');
 
-    // Generate AI response with semantic analysis
-    const aiService = getAdvancedAIService();
-    const result = await aiService.generateFinancialAdvice(question, analysis, rules, {
+    // Generate AI response using OpenAI
+    const openaiService = getOpenAIService();
+    const result = await openaiService.generateFinancialAdvice(question, analysis, rules, {
       userProfile: req.user.profile,
       questionType: 'query'
     });
@@ -77,46 +75,25 @@ router.post('/query', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('❌ [ERROR] AI Query failed at layer:', err.layer || 'unknown');
-    console.error('❌ [ERROR] Error message:', err.message);
-    console.error('❌ [ERROR] Stack trace:', err.stack);
+    console.error('❌ [ERROR] AI Query failed');
+    console.error('❌ [ERROR] Layer:', err.layer || 'unknown');
+    console.error('❌ [ERROR] Message:', err.message);
+    console.error('❌ [ERROR] Stack:', err.stack);
 
-    // Generate intelligent fallback response using semantic analysis
-    try {
-      console.log('🔄 Generating semantic fallback response...');
-      const expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 }).limit(50);
-      const analyzer = new TransactionAnalyzer();
-      const analysis = await analyzer.analyzeExpenses(expenses, req.user);
-      const ruleEngine = new RuleEngine();
-      const rules = await ruleEngine.applyRules(analysis, req.user);
-
-      // Use semantic analysis instead of keyword matching
-      console.log('🎯 Performing semantic analysis for fallback...');
-      const semanticContext = performSemanticAnalysis(req.body.question);
-      const aiService = getAdvancedAIService();
-      const fallbackResult = await aiService.generateFallbackAdvice(semanticContext, analysis, rules);
-
-      console.log('✅ Fallback response generated successfully');
-
-      res.status(200).json({
-        success: true,
-        question: req.body.question,
-        response: fallbackResult.response,
-        model: fallbackResult.model,
-        confidence: fallbackResult.confidence,
-        fallback: true,
-        timestamp: new Date()
-      });
-    } catch (fallbackErr) {
-      console.error('❌ [FALLBACK ERROR]:', fallbackErr.message);
-
-      res.status(500).json({
-        message: `Error processing your question: ${err.message}`,
-        error: err.stack,
+    // Return exact error details - NO FALLBACK
+    res.status(500).json({
+      success: false,
+      error: {
+        message: err.message,
+        type: err.name || 'Error',
         layer: err.layer || 'unknown',
-        success: false
-      });
-    }
+        details: err.details || '',
+        code: err.code || 'UNKNOWN_ERROR',
+        timestamp: new Date(),
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      },
+      question: req.body.question
+    });
   }
 });
 
@@ -184,6 +161,70 @@ router.post('/test-semantic-analysis', async (req, res) => {
   }
 });
 
+// Test endpoint to see all user expenses
+router.get('/debug-expenses', auth, async (req, res) => {
+  try {
+    const Expense = require('../models/Expense');
+    const expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
+    
+    const breakdown = {};
+    expenses.forEach(exp => {
+      breakdown[exp.category] = (breakdown[exp.category] || 0) + exp.amount;
+    });
+    
+    res.json({
+      totalExpenses: expenses.length,
+      expenses: expenses.map(e => ({
+        category: e.category,
+        amount: e.amount,
+        description: e.description,
+        date: e.date
+      })),
+      categoryBreakdown: breakdown,
+      sortedByAmount: Object.entries(breakdown)
+        .filter(([, amt]) => amt > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, amt]) => ({ category: cat, amount: amt }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Test endpoint to debug category sorting
+router.get('/test-sort', auth, async (req, res) => {
+  try {
+    const Expense = require('../models/Expense');
+    const expenses = await Expense.find({ user: req.user._id });
+    
+    const breakdown = {};
+    expenses.forEach(exp => {
+      breakdown[exp.category] = (breakdown[exp.category] || 0) + exp.amount;
+    });
+    
+    console.log('🔍 TEST: Raw breakdown:', breakdown);
+    
+    const sorted = Object.entries(breakdown)
+      .filter(([, amt]) => amt > 0)
+      .sort((a, b) => {
+        const result = b[1] - a[1];
+        console.log(`🔍 TEST: Comparing ${a[0]}(${a[1]}) vs ${b[0]}(${b[1]}): result=${result}`);
+        return result;
+      });
+    
+    console.log('🔍 TEST: Sorted entries:', sorted);
+    console.log('🔍 TEST: Sorted categories:', sorted.map(([cat]) => cat));
+    
+    res.json({
+      raw: breakdown,
+      sorted: sorted.map(([cat, amt]) => ({ category: cat, amount: amt })),
+      categoriesArray: sorted.map(([cat]) => cat)
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Health analysis endpoint for financial analytics dashboard
 router.get('/health-analysis', auth, async (req, res) => {
   console.log('🏥 ===== HEALTH ANALYSIS ENDPOINT CALLED =====');
@@ -194,53 +235,32 @@ router.get('/health-analysis', auth, async (req, res) => {
     let expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
     console.log('🏥 Found expenses:', expenses.length);
 
+    // Ensure user has profile object
+    if (!req.user.profile) {
+      req.user.profile = {};
+    }
+
     // If no expenses, add demo data for testing
     let useDemo = false;
     if (expenses.length === 0) {
-      console.log('🏥 No expenses found, generating demo data...');
-      useDemo = true;
-      
-      // Generate demo expenses for testing - SAVE TO DATABASE
-      const demoExpenses = [
-        { user: req.user._id, date: new Date(), category: 'food', amount: 450, description: 'Groceries' },
-        { user: req.user._id, date: new Date(Date.now() - 2*24*60*60*1000), category: 'transport', amount: 200, description: 'Fuel' },
-        { user: req.user._id, date: new Date(Date.now() - 3*24*60*60*1000), category: 'entertainment', amount: 300, description: 'Movie & Dining' },
-        { user: req.user._id, date: new Date(Date.now() - 5*24*60*60*1000), category: 'utilities', amount: 500, description: 'Electricity & Water' },
-        { user: req.user._id, date: new Date(Date.now() - 7*24*60*60*1000), category: 'food', amount: 350, description: 'Restaurant' },
-        { user: req.user._id, date: new Date(Date.now() - 10*24*60*60*1000), category: 'other', amount: 800, description: 'Clothes' },
-        { user: req.user._id, date: new Date(Date.now() - 12*24*60*60*1000), category: 'health', amount: 400, description: 'Medical' },
-      ];
-      
-      // Actually save demo expenses to database
-      try {
-        const savedDemoExpenses = await Expense.insertMany(demoExpenses);
-        console.log('🏥 Demo expenses saved successfully:', savedDemoExpenses.length);
-        expenses = savedDemoExpenses;
-      } catch (demoErr) {
-        console.error('⚠️ Failed to save demo expenses:', demoErr.message);
-        // Continue without saving - will use transaction analyzer fallback
-      }
-      
-      // Create temporary user profile with default data
-      req.user.profile = req.user.profile || {
-        income: 50000,
-        savings: 10000,
-        currency: 'INR'
-      };
+      console.log('🏥 No expenses found, returning empty analysis');
+      // No demo data generation - return empty state
     }
 
     // Analyze transactions
     const analysis = await TransactionAnalyzer.analyzeExpenses(req.user._id);
     console.log('🏥 Transaction analysis completed');
+    console.log('🏥 Analysis categoryBreakdown:', analysis.categoryBreakdown);
     console.log('🏥 Analysis data:', {
       totalSpent: analysis.totalSpent,
       categories: Object.keys(analysis.categoryBreakdown || {}),
-      monthlyAverage: analysis.averages?.monthly
+      monthlyAverage: analysis.averages?.monthly,
+      userIncome: analysis.userProfile?.income,
+      userSavings: analysis.userProfile?.savings
     });
 
     // Apply financial rules
-    const ruleEngine = new RuleEngine();
-    const rules = await ruleEngine.applyRules(analysis, req.user);
+    const rules = RuleEngine.applyRules(analysis);
     console.log('🏥 Rule engine applied');
     console.log('🏥 Health score:', rules.summary?.overallHealthScore);
 
@@ -250,25 +270,52 @@ router.get('/health-analysis', auth, async (req, res) => {
     const analytics = await analyticsService.generateAnalytics(analysis, rules, req.user);
     console.log('🏥 Financial analytics generated');
 
+    // Sort categories by spending amount (descending)
+    console.log('🏥 Raw categoryBreakdown:', analysis.categoryBreakdown);
+    console.log('🏥 Type of categoryBreakdown:', typeof analysis.categoryBreakdown);
+    
+    const categoryEntries = Object.entries(analysis.categoryBreakdown || {})
+      .filter(([cat, amount]) => {
+        const isPositive = amount > 0;
+        console.log(`🏥 Filtering ${cat}: ${amount} > 0 = ${isPositive}`);
+        return isPositive;
+      })
+      .sort((a, b) => {
+        console.log(`🏥 Comparing ${a[0]}(${a[1]}) vs ${b[0]}(${b[1]}): ${b[1]} - ${a[1]} = ${b[1] - a[1]}`);
+        return b[1] - a[1];
+      });
+    
+    const sortedCategories = categoryEntries.map(([cat]) => cat);
+    
+    // Create a new categoryBreakdown in sorted order
+    const sortedCategoryBreakdown = {};
+    categoryEntries.forEach(([cat, amount]) => {
+      sortedCategoryBreakdown[cat] = parseFloat(amount.toFixed(2));
+    });
+    
+    console.log('🏥 Category entries after sort:', categoryEntries);
+    console.log('🏥 Sorted categories array:', sortedCategories);
+    console.log('🏥 Sorted categoryBreakdown:', sortedCategoryBreakdown);
+
     const responseData = {
       success: true,
-      overallScore: rules.summary?.overallHealthScore || 70,
+      overallScore: rules.summary?.overallHealthScore || 0,
       summary: rules.summary?.description || generateDefaultSummary(rules, analysis),
       kpis: {
         savingsRate: {
-          rate: analytics?.savingsRate || 15,
-          status: analytics?.savingsRateStatus || 'good'
+          rate: analytics?.savingsRate ?? 0,
+          status: analytics?.savingsRateStatus || 'fair'
         },
         expenseRatio: {
-          ratio: analytics?.expenseRatio || 75,
+          ratio: analytics?.expenseRatio ?? 0,
           status: analytics?.expenseRatioStatus || 'fair'
         }
       },
       recommendations: rules.recommendations || [],
       analysis: {
         totalSpent: analysis.totalSpent || 0,
-        categories: Object.keys(analysis.categoryBreakdown || {}).filter(cat => analysis.categoryBreakdown[cat] > 0),
-        categoryBreakdown: analysis.categoryBreakdown || {},
+        categories: [...sortedCategories],  // Explicitly copy the array
+        categoryBreakdown: { ...sortedCategoryBreakdown },  // Explicitly copy the object
         trends: analysis.trends || {},
         averageMonthly: analysis.averages?.monthly || 0
       },
@@ -281,60 +328,35 @@ router.get('/health-analysis', auth, async (req, res) => {
     console.log('🏥 Response data prepared:', {
       score: responseData.overallScore,
       totalSpent: responseData.analysis.totalSpent,
-      categoriesCount: responseData.analysis.categories.length
+      categoriesCount: responseData.analysis.categories.length,
+      categoriesArray: responseData.analysis.categories,
+      categoryBreakdownKeys: Object.keys(responseData.analysis.categoryBreakdown),
+      fullCategoryBreakdown: responseData.analysis.categoryBreakdown
     });
 
+    // Add cache-busting headers
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     res.json(responseData);
 
   } catch (err) {
     console.error('❌ [ERROR] Health analysis failed:', err.message);
     console.error('❌ [ERROR] Stack trace:', err.stack);
 
-    // Return demo data on error
-    res.status(200).json({
-      success: true,
-      overallScore: 72,
-      summary: "Your financial health score is 72/100. You're doing well with moderate spending. Focus on increasing your savings rate and building an emergency fund.",
-      kpis: {
-        savingsRate: { rate: 18, status: 'good' },
-        expenseRatio: { ratio: 72, status: 'fair' }
-      },
-      recommendations: [
-        { priority: 'high', title: 'Build Emergency Fund', description: 'Save 3-6 months of expenses in an easily accessible account' },
-        { priority: 'medium', title: 'Reduce High Spending Categories', description: 'Review your food and entertainment expenses' },
-        { priority: 'low', title: 'Start Investing', description: 'Once emergency fund is built, consider investing in mutual funds' }
-      ],
-      analysis: {
-        totalSpent: 3400,
-        categories: ['Food', 'Transport', 'Entertainment', 'Utilities', 'Shopping', 'Health'],
-        categoryBreakdown: {
-          'Food': 800,
-          'Transport': 200,
-          'Entertainment': 300,
-          'Utilities': 500,
-          'Shopping': 800,
-          'Health': 400
-        },
-        trends: {},
-        averageMonthly: 3400
-      },
-      alerts: [
-        { type: 'ELEVATED_SPENDING', severity: 'medium', message: 'Your spending ratio is 72% of income. Try to increase savings.' }
-      ],
-      insights: [
-        'Your savings rate is approximately 18%',
-        'Shopping category needs attention - it\'s 24% of your spending',
-        'Good balance across expense categories'
-      ],
-      isDemo: true,
-      timestamp: new Date()
+    // Return error response instead of hardcoded demo data
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate financial health analysis',
+      error: err.message
     });
   }
 });
 
 // Helper function to generate default summary
 function generateDefaultSummary(rules, analysis) {
-  const score = rules.summary?.overallHealthScore || 70;
+  const score = rules.summary?.overallHealthScore || 0;
   let summary = '';
   
   if (score >= 80) {
@@ -376,20 +398,11 @@ router.get('/market-data', async (req, res) => {
     console.error('❌ [ERROR] Market data failed:', err.message);
     console.error('❌ [ERROR] Stack trace:', err.stack);
 
-    // Return fallback data
-    res.status(200).json({
-      success: true,
-      marketData: {
-        indices: [
-          { symbol: 'SPY', name: 'S&P 500', price: 450.00, change: 2.50, changePercent: 0.56 },
-          { symbol: 'QQQ', name: 'Nasdaq 100', price: 380.00, change: -1.20, changePercent: -0.31 }
-        ],
-        economic: { inflation: 3.1, unemployment: 4.1, gdp: 2.3 },
-        timestamp: new Date()
-      },
-      news: [],
-      exchangeRates: { USD_INR: 83.5, EUR_USD: 1.08 },
-      timestamp: new Date()
+    // Return error response instead of hardcoded fallback data
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch market data',
+      error: err.message
     });
   }
 });
