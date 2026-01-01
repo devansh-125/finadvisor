@@ -15,14 +15,16 @@ A cutting-edge full-stack JavaScript application that leverages advanced AI tech
 
 ## 🛠️ Tech Stack (2026 Edition)
 
-- **Backend**: 
+- **Backend**:
+
   - Node.js 18+, Express 5.2+
   - MongoDB (Atlas/Local)
   - JWT, bcryptjs for security
   - OpenRouter API (GPT-4 Turbo)
   - Passport.js for OAuth authentication
 
-- **Frontend**: 
+- **Frontend**:
+
   - React 18 with modern hooks
   - Vite for ultra-fast builds
   - Tailwind CSS 3 with animations
@@ -30,12 +32,13 @@ A cutting-edge full-stack JavaScript application that leverages advanced AI tech
   - Context API for state management
   - Axios for API communication
 
-- **Database**: 
+- **Database**:
+
   - MongoDB with Mongoose ODM
   - Atlas Cloud or Local instances
   - Indexed queries for performance
 
-- **AI & Analytics**: 
+- **AI & Analytics**:
   - OpenRouter API (GPT-4 Turbo model)
   - Advanced transaction analysis engine
   - Intelligent rule-based recommendation system
@@ -217,6 +220,7 @@ npm run dev  # Development with hot-reload
 ```
 
 Output should show:
+
 ```
 ✅ MongoDB connected successfully!
 🚀 Server successfully listening on http://localhost:5000
@@ -231,6 +235,7 @@ npm run dev
 ```
 
 Output should show:
+
 ```
 ➜  Local:   http://localhost:5173/
 ➜  Network: http://192.168.x.x:5173/
@@ -246,37 +251,39 @@ Output should show:
 
 ### Authentication Endpoints
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `GET` | `/api/auth/google` | Initiate Google OAuth login | ❌ |
-| `GET` | `/api/auth/google/callback` | OAuth callback handler | ❌ |
-| `GET` | `/api/auth/profile` | Get authenticated user profile | ✅ |
-| `POST` | `/api/auth/logout` | Logout user & clear session | ✅ |
+| Method | Endpoint                    | Description                    | Auth |
+| ------ | --------------------------- | ------------------------------ | ---- |
+| `GET`  | `/api/auth/google`          | Initiate Google OAuth login    | ❌   |
+| `GET`  | `/api/auth/google/callback` | OAuth callback handler         | ❌   |
+| `GET`  | `/api/auth/profile`         | Get authenticated user profile | ✅   |
+| `POST` | `/api/auth/logout`          | Logout user & clear session    | ✅   |
 
 ### Expense Management Endpoints
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `GET` | `/api/expenses` | Get all user expenses | ✅ |
-| `POST` | `/api/expenses` | Create new expense | ✅ |
-| `PUT` | `/api/expenses/:id` | Update expense by ID | ✅ |
-| `DELETE` | `/api/expenses/:id` | Delete expense by ID | ✅ |
+| Method   | Endpoint            | Description           | Auth |
+| -------- | ------------------- | --------------------- | ---- |
+| `GET`    | `/api/expenses`     | Get all user expenses | ✅   |
+| `POST`   | `/api/expenses`     | Create new expense    | ✅   |
+| `PUT`    | `/api/expenses/:id` | Update expense by ID  | ✅   |
+| `DELETE` | `/api/expenses/:id` | Delete expense by ID  | ✅   |
 
 ### AI Query Endpoints
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/api/ai/query` | Send financial query to AI | ✅ |
-| `GET` | `/api/ai/history` | Get AI query history | ✅ |
+| Method | Endpoint          | Description                | Auth |
+| ------ | ----------------- | -------------------------- | ---- |
+| `POST` | `/api/ai/query`   | Send financial query to AI | ✅   |
+| `GET`  | `/api/ai/history` | Get AI query history       | ✅   |
 
 ### Example Requests
 
 #### Login with Google
+
 ```bash
 curl -X GET http://localhost:5000/api/auth/google
 ```
 
 #### Add New Expense
+
 ```bash
 curl -X POST http://localhost:5000/api/expenses \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -290,6 +297,7 @@ curl -X POST http://localhost:5000/api/expenses \
 ```
 
 #### Ask AI Financial Question
+
 ```bash
 curl -X POST http://localhost:5000/api/ai/query \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -322,7 +330,7 @@ npm start              # Start production server
 For containerized deployment, create `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   backend:
     build: ./backend
@@ -333,12 +341,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - mongo
-  
+
   frontend:
     build: ./frontend
     ports:
       - "3000:3000"
-  
+
   mongo:
     image: mongo:latest
     ports:
@@ -370,21 +378,22 @@ npm run format    # Format code with Prettier (if configured)
 
 ### Environment Variables Reference
 
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `PORT` | Express server port | No | `5000` |
-| `NODE_ENV` | Environment mode | No | `development` |
-| `MONGO_URI` | MongoDB connection string | ✅ Yes | `mongodb+srv://...` |
-| `JWT_SECRET` | JWT signing key (min 32 chars) | ✅ Yes | `your_secret_key_here` |
-| `OPENROUTER_API_KEY` | OpenRouter API key | ✅ Yes | `sk-or-v1-...` |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | ✅ Yes | `xxx.apps.googleusercontent.com` |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | ✅ Yes | `GOCSPX-xxx` |
-| `OPENAI_API_KEY` | Direct OpenAI key (optional) | No | `sk-...` |
-| `GROQ_API_KEY` | Groq API key (optional) | No | `gsk-...` |
+| Variable               | Description                    | Required | Example                          |
+| ---------------------- | ------------------------------ | -------- | -------------------------------- |
+| `PORT`                 | Express server port            | No       | `5000`                           |
+| `NODE_ENV`             | Environment mode               | No       | `development`                    |
+| `MONGO_URI`            | MongoDB connection string      | ✅ Yes   | `mongodb+srv://...`              |
+| `JWT_SECRET`           | JWT signing key (min 32 chars) | ✅ Yes   | `your_secret_key_here`           |
+| `OPENROUTER_API_KEY`   | OpenRouter API key             | ✅ Yes   | `sk-or-v1-...`                   |
+| `GOOGLE_CLIENT_ID`     | Google OAuth Client ID         | ✅ Yes   | `xxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret     | ✅ Yes   | `GOCSPX-xxx`                     |
+| `OPENAI_API_KEY`       | Direct OpenAI key (optional)   | No       | `sk-...`                         |
+| `GROQ_API_KEY`         | Groq API key (optional)        | No       | `gsk-...`                        |
 
 ### Project Dependencies
 
 #### Key Backend Dependencies
+
 - `express` (5.2+) - Web framework
 - `mongoose` (8.21+) - MongoDB ODM
 - `jsonwebtoken` (9.0+) - JWT authentication
@@ -396,6 +405,7 @@ npm run format    # Format code with Prettier (if configured)
 - `nodemon` (3.1+) - Dev auto-restart
 
 #### Key Frontend Dependencies
+
 - `react` (18+) - UI library
 - `react-router-dom` (6+) - Routing
 - `vite` (4.5+) - Build tool
@@ -409,27 +419,32 @@ We welcome contributions! Here's how to contribute:
 ### Development Workflow
 
 1. **Fork the repository**
+
    ```bash
    # Go to https://github.com/devansh-125/finadvisor/fork
    ```
 
 2. **Clone your fork**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/finadvisor.git
    cd finadvisor
    ```
 
 3. **Create feature branch**
+
    ```bash
    git checkout -b feature/amazing-feature
    ```
 
 4. **Make your changes**
+
    - Follow existing code style
    - Write clear commit messages
    - Update relevant documentation
 
 5. **Commit & push**
+
    ```bash
    git add .
    git commit -m "feat: Add amazing feature"
@@ -469,24 +484,28 @@ We welcome contributions! Here's how to contribute:
 ### Common Issues & Solutions
 
 #### MongoDB Connection Failed
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:27017
 Solution: Ensure MongoDB is running or check MONGO_URI in .env
 ```
 
 #### Port Already in Use
+
 ```
 Error: listen EADDRINUSE :::5000
 Solution: Change PORT in .env or kill process: lsof -ti:5000 | xargs kill -9
 ```
 
 #### API Key Errors
+
 ```
 Error: OPENROUTER_API_KEY not found
 Solution: Add OPENROUTER_API_KEY to .env and restart server
 ```
 
 #### CORS Issues
+
 ```
 Error: Access to XMLHttpRequest blocked by CORS
 Solution: Ensure backend is running and frontend URL is whitelisted
@@ -513,16 +532,19 @@ This project is licensed under the **ISC License** - see LICENSE file for detail
 ## 🚀 Future Roadmap
 
 ### Q1 2026
+
 - [ ] Voice-enabled financial queries
 - [ ] Multi-language support
 - [ ] Mobile app (React Native)
 
 ### Q2 2026
+
 - [ ] Investment portfolio tracking
 - [ ] Bank API integrations
 - [ ] Advanced predictive analytics
 
 ### Q3 2026+
+
 - [ ] Real-time market data
 - [ ] Blockchain integration
 - [ ] AI-powered tax planning
