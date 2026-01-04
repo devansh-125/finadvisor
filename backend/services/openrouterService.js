@@ -94,6 +94,7 @@ Always reference the user's actual financial data (income, expenses, savings) in
     totalSpent = 0,
     categoryBreakdown = {},
     averages = {},
+    timeframes = {},
     userProfile = {}
   } = analysis;
 
@@ -101,7 +102,7 @@ Always reference the user's actual financial data (income, expenses, savings) in
 
   // Calculate key metrics
   const monthlyIncome = (userProfile.income || 0) / 12;
-  const monthlyExpenses = averages.monthly || totalSpent || 0;
+  const monthlyExpenses = timeframes.last30Days || totalSpent || 0;
   const monthlySurplus = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? Math.round((monthlySurplus / monthlyIncome) * 100) : 0;
 
@@ -115,7 +116,7 @@ Always reference the user's actual financial data (income, expenses, savings) in
     const financialContext = `
 USER FINANCIAL PROFILE:
 - Monthly Income: ₹${Math.round(monthlyIncome).toLocaleString('en-IN')}
-- Monthly Expenses: ₹${Math.round(monthlyExpenses).toLocaleString('en-IN')}
+- Monthly Expenses (Last 30 Days): ₹${Math.round(monthlyExpenses).toLocaleString('en-IN')}
 - Monthly Surplus/Deficit: ₹${Math.round(monthlySurplus).toLocaleString('en-IN')}
 - Savings Rate: ${savingsRate}%
 - Total Savings: ₹${(userProfile.savings || 0).toLocaleString('en-IN')}

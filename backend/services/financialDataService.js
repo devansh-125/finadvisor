@@ -51,7 +51,7 @@ class FinancialDataService {
       return marketData;
     } catch (error) {
       console.error('Error fetching market data:', error);
-      return this.getFallbackMarketData();
+      throw error;
     }
   }
 
@@ -121,26 +121,7 @@ class FinancialDataService {
     };
   }
 
-  /**
-   * Get fallback market data when APIs fail
-   */
-  getFallbackMarketData() {
-    return {
-      indices: [
-        { symbol: 'SPY', name: 'S&P 500', price: 450.00, change: 2.50, changePercent: 0.56 },
-        { symbol: 'QQQ', name: 'Nasdaq 100', price: 380.00, change: -1.20, changePercent: -0.31 },
-        { symbol: 'IWM', name: 'Russell 2000', price: 180.00, change: 1.80, changePercent: 1.01 }
-      ],
-      economic: {
-        inflation: 3.1,
-        unemployment: 3.7,
-        gdp: 2.1,
-        interestRate: 5.25
-      },
-      timestamp: new Date(),
-      source: 'fallback_data'
-    };
-  }
+
 
   /**
    * Get financial news relevant to user's interests
@@ -152,7 +133,7 @@ class FinancialDataService {
     }
 
     if (!this.apiKeys.newsApi) {
-      return this.getFallbackNews();
+      throw new Error('News API key not configured');
     }
 
     try {
@@ -182,47 +163,11 @@ class FinancialDataService {
       return result;
     } catch (error) {
       console.error('Error fetching financial news:', error);
-      return this.getFallbackNews();
+      throw error;
     }
   }
 
-  /**
-   * Get fallback news when API fails
-   */
-  getFallbackNews() {
-    return {
-      news: [
-        {
-          title: "Federal Reserve Signals Potential Rate Cuts in 2026",
-          description: "The Federal Reserve has indicated that interest rate cuts may be coming in 2026 as inflation continues to moderate.",
-          url: "#",
-          source: "Financial Times",
-          publishedAt: new Date().toISOString(),
-          imageUrl: null,
-          relevance: 8
-        },
-        {
-          title: "Tech Stocks Rally on AI Optimism",
-          description: "Major technology companies saw gains as investors bet on continued growth in artificial intelligence applications.",
-          url: "#",
-          source: "Bloomberg",
-          publishedAt: new Date().toISOString(),
-          imageUrl: null,
-          relevance: 7
-        },
-        {
-          title: "Oil Prices Stabilize Above $80 Per Barrel",
-          description: "Crude oil prices have found support above $80 per barrel amid supply concerns from major producers.",
-          url: "#",
-          source: "Reuters",
-          publishedAt: new Date().toISOString(),
-          imageUrl: null,
-          relevance: 6
-        }
-      ],
-      timestamp: new Date()
-    };
-  }
+
 
   calculateNewsRelevance(article, topics) {
     const text = `${article.title} ${article.description}`.toLowerCase();
@@ -251,7 +196,7 @@ class FinancialDataService {
     }
 
     if (!this.apiKeys.exchangerate) {
-      return this.getFallbackExchangeRates(baseCurrency);
+      throw new Error('Exchange rate API key not configured');
     }
 
     try {
@@ -272,33 +217,11 @@ class FinancialDataService {
       return result;
     } catch (error) {
       console.error('Error fetching exchange rates:', error);
-      return this.getFallbackExchangeRates(baseCurrency);
+      throw error;
     }
   }
 
-  /**
-   * Get fallback exchange rates when API fails
-   */
-  getFallbackExchangeRates(baseCurrency = 'USD') {
-    const rates = {
-      USD: {
-        INR: 83.5,
-        EUR: 0.92,
-        GBP: 0.79,
-        JPY: 150.0,
-        timestamp: new Date()
-      },
-      EUR: {
-        USD: 1.09,
-        INR: 90.8,
-        GBP: 0.86,
-        JPY: 163.2,
-        timestamp: new Date()
-      }
-    };
 
-    return rates[baseCurrency] || rates.USD;
-  }
 
   /**
    * Get personalized investment recommendations based on risk profile
@@ -485,42 +408,7 @@ class FinancialDataService {
     return age < this.cacheTimeout;
   }
 
-  /**
-   * Fallback data for when APIs are unavailable
-   */
-  getFallbackMarketData() {
-    return {
-      indices: [],
-      economic: {},
-      timestamp: new Date(),
-      source: 'no_data_available'
-    };
-  }
 
-  getFallbackNews() {
-    return {
-      news: [],
-      timestamp: new Date()
-    };
-  }
-
-  getFallbackExchangeRates(baseCurrency) {
-    const rates = {
-      USD: 1,
-      EUR: 0.85,
-      GBP: 0.73,
-      JPY: 110.0,
-      CAD: 1.25,
-      AUD: 1.35
-    };
-
-    return {
-      base: baseCurrency,
-      rates,
-      timestamp: new Date(),
-      source: 'fallback_rates'
-    };
-  }
 
   /**
    * Test all API connections

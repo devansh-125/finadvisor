@@ -628,16 +628,7 @@ class FinancialAnalytics {
 
     } catch (error) {
       console.error('❌ Error generating analytics:', error.message);
-      // Return basic analytics on error
-      return {
-        savingsRate: 15,
-        savingsRateStatus: 'good',
-        expenseRatio: 75,
-        expenseRatioStatus: 'fair',
-        kpis: {},
-        insights: [],
-        projections: []
-      };
+      throw error;
     }
   }
 }

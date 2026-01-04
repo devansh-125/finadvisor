@@ -6,6 +6,15 @@ const aiQuerySchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  conversationId: {
+    type: String,
+    required: true,
+    index: true,
+  },
+  title: {
+    type: String,
+    default: 'New Chat',
+  },
   question: {
     type: String,
     required: true,

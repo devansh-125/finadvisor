@@ -13,18 +13,7 @@ const auth = async (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      // For testing/demo purposes, create a mock user if no token
-      console.log('⚠️  No token found, using demo user for testing');
-      req.user = {
-        _id: '507f1f77bcf86cd799439011',
-        email: 'demo@example.com',
-        profile: {
-          income: 50000,
-          savings: 10000,
-          currency: 'INR'
-        }
-      };
-      return next();
+      return res.status(401).json({ message: 'No authentication token provided' });
     }
 
     try {
@@ -43,17 +32,7 @@ const auth = async (req, res, next) => {
       next();
     } catch (tokenErr) {
       console.log('❌ JWT verification failed:', tokenErr.message);
-      // Use demo user instead of rejecting
-      req.user = {
-        _id: '507f1f77bcf86cd799439011',
-        email: 'demo@example.com',
-        profile: {
-          income: 50000,
-          savings: 10000,
-          currency: 'INR'
-        }
-      };
-      next();
+      return res.status(401).json({ message: 'Invalid or expired token' });
     }
   } catch (err) {
     console.error('❌ Auth middleware error:', err);

@@ -12,22 +12,9 @@ const FinancialDataService = require('../services/financialDataService');
 
 
 // AI Query endpoint using OpenAI API
-router.post('/query', async (req, res) => {
+router.post('/query', auth, async (req, res) => {
   console.log('🔍 ===== QUERY ENDPOINT CALLED =====');
   console.log('🔍 Question received:', req.body.question);
-
-  // Add mock user for testing (normally provided by auth middleware)
-  if (!req.user) {
-    req.user = {
-      _id: '507f1f77bcf86cd799439011',
-      profile: {
-        income: 50000,
-        savings: 10000,
-        currency: 'INR'
-      }
-    };
-    console.log('🔍 Added mock user for testing');
-  }
 
   try {
     const { question } = req.body;

@@ -17,17 +17,8 @@ class TransactionAnalyzer {
     try {
       let user = await User.findById(userId);
       
-      // For demo/testing, create a mock user object if not found
       if (!user) {
-        console.log('⚠️  User not found, using mock profile for demo');
-        user = {
-          _id: userId,
-          profile: {
-            income: 50000,
-            savings: 10000,
-            currency: 'INR'
-          }
-        };
+        throw new Error(`User with ID ${userId} not found`);
       }
 
       // Initialize categoryTrends at the beginning to avoid initialization issues
@@ -105,13 +96,14 @@ class TransactionAnalyzer {
       const daysOfExpenses = Math.max(
         1,
         Math.round(
-          (new Date(allExpenses[0].date) - new Date(allExpenses[allExpenses.length - 1].date)) /
+          Math.abs(new Date(allExpenses[0].date) - new Date(allExpenses[allExpenses.length - 1].date)) /
             (24 * 60 * 60 * 1000)
         )
       );
       const dailyAverage = totalSpent / daysOfExpenses;
       const weeklyAverage = dailyAverage * 7;
-      const monthlyAverage = dailyAverage * 30;
+      // Use actual last 30 days spending for monthly average to match dashboard
+      const monthlyAverage = spentLast30;
 
       // Calculate month-over-month trend
       const monthlyData = {};
