@@ -23,6 +23,10 @@ const aiQuerySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  metadata: {
+    type: Object,
+    default: {},
+  },
   date: {
     type: Date,
     default: Date.now,
@@ -31,4 +35,11 @@ const aiQuerySchema = new mongoose.Schema({
   timestamps: true,
 });
 
-module.exports = mongoose.model('AIQuery', aiQuerySchema);
+let AIQuery;
+
+module.exports = () => {
+  if (!AIQuery) {
+    AIQuery = mongoose.model('AIQuery', aiQuerySchema);
+  }
+  return AIQuery;
+};

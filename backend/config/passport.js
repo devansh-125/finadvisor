@@ -3,7 +3,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 // Lazy load User model to avoid circular dependencies
-const getUser = () => require('../models/User');
+const getUser = () => require('../models/User')();
 
 console.log('Setting up Google OAuth Strategy...');
 passport.use(new GoogleStrategy({

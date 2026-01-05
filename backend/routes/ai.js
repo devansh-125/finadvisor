@@ -1,86 +1,190 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Expense = require('../models/Expense');
-const User = require('../models/User');
-const TransactionAnalyzer = require('../services/transactionAnalyzer');
-const RuleEngine = require('../services/ruleEngine');
-const { getOpenAIService } = require('../services/openaiService');
-const FinancialAnalytics = require('../services/financialAnalytics');
-const FinancialDataService = require('../services/financialDataService');
-
-
+const getExpense = () => require('../models/Expense')();
+const getUser = () => require('../models/User')();
+const getTransactionAnalyzer = () => require('../services/transactionAnalyzer');
+const getRuleEngine = () => require('../services/ruleEngine');
+const getOpenAIServiceModule = () => require('../services/openaiService');
+const getFinancialAnalytics = () => require('../services/financialAnalytics');
+const getFinancialDataService = () => require('../services/financialDataService');
+const getAIQuery = () => require('../models/AIQuery')();
+const uuidv4 = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 // AI Query endpoint using OpenAI API
 router.post('/query', auth, async (req, res) => {
   console.log('🔍 ===== QUERY ENDPOINT CALLED =====');
   console.log('🔍 Question received:', req.body.question);
+  console.log('🔍 Conversation ID:', req.body.conversationId);
 
   try {
-    const { question } = req.body;
-    if (!question) {
+    const { question, conversationId } = req.body;
+
+    if (!question || question.trim() === '') {
       return res.status(400).json({ message: 'Question is required' });
     }
 
-    console.log('🔍 Processing question for user:', req.user._id);
-
-    // Get user's financial data
-    const expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
-    console.log('🔍 Found expenses:', expenses.length);
-
-    // Analyze transactions
+    // Layer 1: Analyze transactions
+    const TransactionAnalyzer = getTransactionAnalyzer();
     const analysis = await TransactionAnalyzer.analyzeExpenses(req.user._id);
-    console.log('🔍 Transaction analysis completed');
 
-    // Apply financial rules
+    if (analysis.totalExpenses === 0) {
+      return res.json({
+        response: "I don't have any expense data to analyze yet. Start by adding some expenses to get personalized financial advice!",
+        metadata: {
+          totalExpenses: 0,
+          totalSpent: 0,
+          last30Days: 0,
+          topCategory: 'N/A',
+        },
+      });
+    }
+
+    // Layer 2: Apply business rules
+    const RuleEngine = getRuleEngine();
     const rules = RuleEngine.applyRules(analysis);
-    console.log('🔍 Rule engine applied');
 
-    // Generate AI response using OpenAI
-    const openaiService = getOpenAIService();
-    const result = await openaiService.generateFinancialAdvice(question, analysis, rules, {
-      userProfile: req.user.profile,
-      questionType: 'query'
-    });
+    // Layer 3: Calculate advanced financial KPIs
+    const FinancialAnalytics = getFinancialAnalytics();
+    const financialAnalyticsInstance = new FinancialAnalytics();
+    const kpis = financialAnalyticsInstance.calculateKPIs(analysis, rules);
 
-    console.log('✅ AI response generated successfully');
-    console.log('📝 Response model:', result.model);
-    console.log('📊 Confidence:', result.confidence);
+    // Layer 4: Get market data for context (if relevant to question)
+    const questionLower = question.toLowerCase();
+    const needsMarketData = questionLower.includes('market') ||
+                           questionLower.includes('investment') ||
+                           questionLower.includes('stock') ||
+                           questionLower.includes('economy');
 
-    res.json({
-      success: true,
-      question: question,
-      response: result.response,
-      model: result.model,
-      confidence: result.confidence,
-      analysis: {
+    let marketData = null;
+    if (needsMarketData) {
+      const FinancialDataService = getFinancialDataService();
+      const financialDataServiceInstance = new FinancialDataService();
+      marketData = await financialDataServiceInstance.getMarketData();
+    }
+
+    // Layer 5: Generate AI advice
+    const context = {
+      kpis,
+      marketData,
+      additionalContext: needsMarketData ? 'Include relevant market context in your response.' : null
+    };
+
+    const aiServiceModule = getOpenAIServiceModule();
+    const { getOpenAIService } = aiServiceModule;
+    const aiService = getOpenAIService();
+    const aiResult = await aiService.generateFinancialAdvice(question, analysis, rules, context);
+    const aiResponse = aiResult.response;
+
+    // Handle Conversation Tracking
+    let currentConversationId = conversationId;
+    let chatTitle = 'New Chat';
+
+    if (!currentConversationId) {
+      currentConversationId = uuidv4();
+      // Generate a short title from the first question
+      chatTitle = question.length > 30 ? question.substring(0, 30) + '...' : question;
+    } else {
+      // Try to find existing title
+      const existingQuery = await getAIQuery().findOne({ conversationId: currentConversationId });
+      if (existingQuery) {
+        chatTitle = existingQuery.title;
+      }
+    }
+
+    // Save the interaction to database
+    const AIQuery = getAIQuery();
+    const newQuery = new AIQuery({
+      user: req.user._id,
+      conversationId: currentConversationId,
+      title: chatTitle,
+      question,
+      response: aiResponse,
+      metadata: {
         totalSpent: analysis.totalSpent,
-        categories: Object.keys(analysis.categoryBreakdown || {}),
-        healthScore: rules.summary?.overallHealthScore || 70
-      },
-      timestamp: new Date()
+        healthScore: rules.summary.overallHealthScore,
+        model: aiResult.model
+      }
+    });
+    await newQuery.save();
+
+    res.json({ 
+      success: true,
+      response: aiResponse,
+      conversationId: currentConversationId,
+      metadata: newQuery.metadata
     });
 
   } catch (err) {
-    console.error('❌ [ERROR] AI Query failed');
-    console.error('❌ [ERROR] Layer:', err.layer || 'unknown');
-    console.error('❌ [ERROR] Message:', err.message);
-    console.error('❌ [ERROR] Stack:', err.stack);
-
-    // Return exact error details - NO FALLBACK
+    console.error('❌ [ERROR] AI Query failed:', err.message);
+    
+    // Return structured error for frontend
     res.status(500).json({
       success: false,
       error: {
-        message: err.message,
-        type: err.name || 'Error',
-        layer: err.layer || 'unknown',
-        details: err.details || '',
-        code: err.code || 'UNKNOWN_ERROR',
-        timestamp: new Date(),
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-      },
-      question: req.body.question
+        message: err.message || 'Failed to get response from AI',
+        code: 'AI_QUERY_ERROR',
+        layer: 'AI_ROUTE',
+        details: err.stack?.split('\n')[1]?.trim()
+      }
     });
+  }
+});
+
+// Get all chat conversations for the user
+router.get('/history', auth, async (req, res) => {
+  try {
+    const conversations = await getAIQuery().aggregate([
+      { $match: { user: req.user._id } },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$conversationId",
+          title: { $first: "$title" },
+          lastMessageAt: { $first: "$createdAt" }
+        }
+      },
+      { $sort: { lastMessageAt: -1 } }
+    ]);
+    res.json({ success: true, conversations });
+  } catch (err) {
+    console.error('❌ [ERROR] Failed to fetch chat history:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to fetch chat history' });
+  }
+});
+
+// Get messages for a specific conversation
+router.get('/history/:conversationId', auth, async (req, res) => {
+  try {
+    const messages = await getAIQuery().find({ 
+      user: req.user._id, 
+      conversationId: req.params.conversationId 
+    }).sort({ createdAt: 1 });
+    
+    res.json({ success: true, messages });
+  } catch (err) {
+    console.error('❌ [ERROR] Failed to fetch conversation:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to fetch conversation' });
+  }
+});
+
+// Delete a conversation
+router.delete('/history/:conversationId', auth, async (req, res) => {
+  try {
+    await getAIQuery().deleteMany({ 
+      user: req.user._id, 
+      conversationId: req.params.conversationId 
+    });
+    res.json({ success: true, message: 'Conversation deleted' });
+  } catch (err) {
+    console.error('❌ [ERROR] Failed to delete conversation:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to delete conversation' });
   }
 });
 
@@ -151,8 +255,7 @@ router.post('/test-semantic-analysis', async (req, res) => {
 // Test endpoint to see all user expenses
 router.get('/debug-expenses', auth, async (req, res) => {
   try {
-    const Expense = require('../models/Expense');
-    const expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
+    const expenses = await getExpense().find({ user: req.user._id }).sort({ date: -1 });
     
     const breakdown = {};
     expenses.forEach(exp => {
@@ -181,8 +284,7 @@ router.get('/debug-expenses', auth, async (req, res) => {
 // Test endpoint to debug category sorting
 router.get('/test-sort', auth, async (req, res) => {
   try {
-    const Expense = require('../models/Expense');
-    const expenses = await Expense.find({ user: req.user._id });
+    const expenses = await getExpense().find({ user: req.user._id });
     
     const breakdown = {};
     expenses.forEach(exp => {
@@ -219,7 +321,7 @@ router.get('/health-analysis', auth, async (req, res) => {
 
   try {
     // Get user's financial data
-    let expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
+    let expenses = await getExpense().find({ user: req.user._id }).sort({ date: -1 });
     console.log('🏥 Found expenses:', expenses.length);
 
     // Ensure user has profile object
@@ -235,7 +337,8 @@ router.get('/health-analysis', auth, async (req, res) => {
     }
 
     // Analyze transactions
-    const analysis = await TransactionAnalyzer.analyzeExpenses(req.user._id);
+    const TransactionAnalyzer2 = getTransactionAnalyzer();
+    const analysis = await TransactionAnalyzer2.analyzeExpenses(req.user._id);
     console.log('🏥 Transaction analysis completed');
     console.log('🏥 Analysis categoryBreakdown:', analysis.categoryBreakdown);
     console.log('🏥 Analysis data:', {
@@ -247,12 +350,13 @@ router.get('/health-analysis', auth, async (req, res) => {
     });
 
     // Apply financial rules
-    const rules = RuleEngine.applyRules(analysis);
+    const RuleEngine2 = getRuleEngine();
+    const rules = RuleEngine2.applyRules(analysis);
     console.log('🏥 Rule engine applied');
     console.log('🏥 Health score:', rules.summary?.overallHealthScore);
 
     // Get financial analytics
-    const FinancialAnalyticsClass = require('../services/financialAnalytics');
+    const FinancialAnalyticsClass = getFinancialAnalytics();
     const analyticsService = new FinancialAnalyticsClass();
     const analytics = await analyticsService.generateAnalytics(analysis, rules, req.user);
     console.log('🏥 Financial analytics generated');
@@ -368,6 +472,7 @@ router.get('/market-data', async (req, res) => {
   console.log('📈 ===== MARKET DATA ENDPOINT CALLED =====');
 
   try {
+    const FinancialDataService = getFinancialDataService();
     const financialDataService = new FinancialDataService();
     const marketData = await financialDataService.getMarketData();
     const newsData = await financialDataService.getFinancialNews();

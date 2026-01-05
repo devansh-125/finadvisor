@@ -30,7 +30,7 @@ console.log('Loading passport...');
 const passport = require('passport');
 console.log('Loading passport config...');
 require('./config/passport');
-console.log('✅ Modules loaded');
+console.log('✅ Passport config loaded');
 
 // Lazy load mongoose when needed
 let mongoose;
@@ -69,57 +69,51 @@ console.log('✅ Session middleware configured (memory store)');
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Register Routes FIRST (before database connection)
+console.log('Loading routes...');
+try {
+  console.log('Loading auth routes...');
+  app.use('/api/auth', require('./routes/auth'));
+  console.log('✅ Auth routes loaded');
+  
+  console.log('Loading expenses routes...');
+  app.use('/api/expenses', require('./routes/expenses'));
+  console.log('✅ Expenses routes loaded');
+  
+  console.log('Loading ai routes...');
+  app.use('/api/ai', require('./routes/ai'));
+  console.log('✅ AI routes loaded');
+  
+  console.log('✅ All routes registered successfully');
+} catch (err) {
+  console.error('❌ Error registering routes:', err.message);
+  console.error('Stack:', err.stack);
+}
+
 // Connect to MongoDB (with timeout) - using lazy-loaded mongoose
 console.log('🔗 Attempting MongoDB connection...');
 console.log(`📡 Connecting to: ${mongoURI.includes('localhost') ? 'Localhost' : 'Atlas Cluster'}`);
 
 let mongoConnectionPromise;
 try {
-  const mongooseModule = getMongoose();
-  mongoConnectionPromise = mongooseModule.connect(mongoURI, {
-    serverSelectionTimeoutMS: 3000, // Fail after 3 seconds if cannot connect
-    socketTimeoutMS: 5000,
-    family: 4, // Use IPv4, skip IPv6
-  })
-  .then(() => {
-    console.log('✅ MongoDB connected successfully!');
-    console.log('📊 Database: finadvisor');
-  })
-  .catch(err => {
-    console.error('❌ MongoDB connection failed!');
-    console.error('Error Name:', err.name);
-    console.error('Error Message:', err.message);
-    if (err.cause) console.error('Error Cause:', err.cause);
-    console.log('⚠️  Continuing without database connection for testing...');
-    // Don't re-throw, just continue
+  const mongoose = getMongoose();
+  // Don't wait for connection, just initiate it
+  mongoose.connect(mongoURI).catch(err => {
+    console.error('⚠️  MongoDB connection error (continuing anyway):', err.message);
   });
+  console.log('✅ MongoDB connection initiated');
+  mongoConnectionPromise = Promise.resolve();
 } catch (err) {
   console.error('❌ Error initiating MongoDB connection:', err.message);
   mongoConnectionPromise = Promise.resolve();
 }
 
-// Set a timeout to ensure we start the server even if DB is taking too long
-const startupTimeout = setTimeout(() => {
-  console.log('⏱️  Startup timeout reached, proceeding with server start...');
-  startServer();
-}, 5000);
-
-// Routes
-console.log('Loading AI routes module...');
-const aiRoutes = require('./routes/ai');
-console.log('AI routes loaded, type:', typeof aiRoutes);
-
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/expenses', require('./routes/expenses'));
-app.use('/api/ai', aiRoutes);
-console.log('All routes registered successfully');
-
-console.log('✅ Routes registered successfully');
+// Start server immediately
+console.log('Database connection attempt completed, starting server...');
+startServer();
 
 // Function to start the server
 function startServer() {
-  clearTimeout(startupTimeout);
-  
   const PORT = process.env.PORT || 5000;
   console.log(`🔄 Attempting to start server on port ${PORT}...`);
 
@@ -137,10 +131,3 @@ function startServer() {
     console.log('✅ Server is now listening for connections');
   });
 }
-
-// Start server when DB connection succeeds or on timeout
-mongoConnectionPromise.finally(() => {
-  console.log('Database connection attempt completed, starting server...');
-  clearTimeout(startupTimeout);
-  startServer();
-});

@@ -4,8 +4,8 @@
  * Returns structured data for Rule Engine to process
  */
 
-const Expense = require('../models/Expense');
-const User = require('../models/User');
+const getExpense = () => require('../models/Expense')();
+const getUser = () => require('../models/User')();
 
 class TransactionAnalyzer {
   /**
@@ -15,6 +15,9 @@ class TransactionAnalyzer {
    */
   static async analyzeExpenses(userId) {
     try {
+      const User = getUser();
+      const Expense = getExpense();
+      
       let user = await User.findById(userId);
       
       if (!user) {

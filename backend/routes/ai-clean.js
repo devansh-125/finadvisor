@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Expense = require('../models/Expense');
-const User = require('../models/User');
+const getExpense = () => require('../models/Expense')();
+const getUser = () => require('../models/User')();
 const TransactionAnalyzer = require('../services/transactionAnalyzer');
 const RuleEngine = require('../services/ruleEngine');
 const { getAdvancedAIService } = require('../services/advancedAIService');
@@ -584,6 +584,7 @@ router.post('/query', async (req, res) => {
     console.log('🔍 Processing question for user:', req.user._id);
 
     // Get user's financial data
+    const Expense = getExpense();
     const expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
     console.log('🔍 Found expenses:', expenses.length);
 
@@ -630,6 +631,7 @@ router.post('/query', async (req, res) => {
     // Generate intelligent fallback response
     try {
       console.log('🔄 Generating intelligent fallback response...');
+      const Expense = getExpense();
       const expenses = await Expense.find({ user: req.user._id }).sort({ date: -1 }).limit(50);
       const analyzer = new TransactionAnalyzer();
       const analysis = await analyzer.analyzeExpenses(expenses, req.user);

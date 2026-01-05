@@ -1,6 +1,6 @@
 const express = require('express');
 const passport = require('passport');
-const User = require('../models/User');
+const getUser = () => require('../models/User')();
 const router = express.Router();
 
 const auth = (req, res, next) => {
@@ -100,6 +100,7 @@ router.get('/user', (req, res) => {
 // Get user profile
 router.get('/profile', auth, async (req, res) => {
   try {
+    const User = getUser();
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -122,6 +123,7 @@ router.put('/profile', auth, async (req, res) => {
   try {
     const { age, income, savings, goals, currency } = req.body;
 
+    const User = getUser();
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

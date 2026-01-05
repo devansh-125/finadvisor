@@ -1,5 +1,5 @@
 const express = require('express');
-const Expense = require('../models/Expense');
+const getExpense = () => require('../models/Expense')();
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -10,7 +10,7 @@ const CATEGORIES = ['food', 'transport', 'entertainment', 'utilities', 'health',
 // Get all expenses for user
 router.get('/', auth, async (req, res) => {
   try {
-    const expenses = await Expense.find({ user: req.user }).sort({ date: -1 });
+    const expenses = await getExpense().find({ user: req.user }).sort({ date: -1 });
     res.json(expenses);
   } catch (err) {
     console.error('Error fetching expenses:', err);
@@ -21,7 +21,7 @@ router.get('/', auth, async (req, res) => {
 // Get analytics/summary for dashboard
 router.get('/analytics/summary', auth, async (req, res) => {
   try {
-    const expenses = await Expense.find({ user: req.user });
+    const expenses = await getExpense().find({ user: req.user });
     
     // Total expenses
     const totalAmount = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -81,6 +81,7 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Description is required' });
     }
 
+    const Expense = getExpense();
     const expense = new Expense({
       user: req.user,
       amount: parseFloat(amount),
@@ -121,6 +122,7 @@ router.put('/:id', auth, async (req, res) => {
     if (description !== undefined) updateData.description = description.trim();
     if (date) updateData.date = new Date(date);
 
+    const Expense = getExpense();
     const expense = await Expense.findOneAndUpdate(
       { _id: req.params.id, user: req.user },
       updateData,
@@ -141,6 +143,7 @@ router.put('/:id', auth, async (req, res) => {
 // Delete expense
 router.delete('/:id', auth, async (req, res) => {
   try {
+    const Expense = getExpense();
     const expense = await Expense.findOneAndDelete({ _id: req.params.id, user: req.user });
 
     if (!expense) {
@@ -163,6 +166,7 @@ router.get('/category/:category', auth, async (req, res) => {
       return res.status(400).json({ message: `Invalid category. Must be one of: ${CATEGORIES.join(', ')}` });
     }
 
+    const Expense = getExpense();
     const expenses = await Expense.find({ user: req.user, category }).sort({ date: -1 });
     res.json(expenses);
   } catch (err) {
