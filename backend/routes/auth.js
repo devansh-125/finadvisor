@@ -80,17 +80,39 @@ router.get('/google/callback',
 );
 
 // Get current user
-router.get('/user', (req, res) => {
+router.get('/user', async (req, res) => {
   console.log('🔍 GET /user called');
   console.log('Session ID:', req.sessionID);
-  console.log('Session:', req.session);
-  console.log('req.user:', req.user);
   console.log('req.isAuthenticated():', req.isAuthenticated());
   console.log('Cookies:', req.headers.cookie);
   
   if (req.user) {
-    console.log('✅ User found, sending user data');
-    res.json(req.user);
+    try {
+      const User = getUser();
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        console.log('❌ User not found in database');
+        return res.status(401).json({ message: 'User not found' });
+      }
+      
+      console.log('✅ User found, sending user data from database');
+      console.log('✅ Profile picture from DB:', user.profilePicture);
+      
+      // Provide fallback avatar if profilePicture is not available
+      const profilePictureUrl = user.profilePicture || 
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&bold=true`;
+      
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePicture: profilePictureUrl,
+        profile: user.profile
+      });
+    } catch (err) {
+      console.error('❌ Error fetching user:', err.message);
+      res.status(500).json({ message: 'Server error' });
+    }
   } else {
     console.log('❌ No user found, returning 401');
     res.status(401).json({ message: 'Not authenticated' });
@@ -105,11 +127,16 @@ router.get('/profile', auth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    
+    // Provide fallback avatar if profilePicture is not available
+    const profilePictureUrl = user.profilePicture || 
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&bold=true`;
+    
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
-      profilePicture: user.profilePicture,
+      profilePicture: profilePictureUrl,
       profile: user.profile
     });
   } catch (err) {

@@ -17,8 +17,16 @@ passport.use(new GoogleStrategy({
       const User = getUser();
       let user = await User.findOne({ googleId: profile.id });
 
+      // Generate a reliable avatar URL
+      const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.displayName)}&background=random&bold=true`;
+
       if (user) {
         console.log('✅ Existing user found:', user._id);
+        // Update profile picture to use the reliable fallback URL
+        // This ensures old distorted Google URLs are replaced
+        user.profilePicture = fallbackAvatarUrl;
+        await user.save();
+        console.log('✅ Updated user profile picture to fallback URL');
         return done(null, user);
       }
 
@@ -28,7 +36,7 @@ passport.use(new GoogleStrategy({
         googleId: profile.id,
         name: profile.displayName,
         email: profile.emails[0]?.value,
-        profilePicture: profile.photos[0]?.value,
+        profilePicture: fallbackAvatarUrl,
       });
 
       await user.save();
