@@ -6,6 +6,7 @@
 
 const getExpense = () => require('../models/Expense')();
 const getUser = () => require('../models/User')();
+const getBudget = () => require('../models/Budget')();
 
 class TransactionAnalyzer {
   /**
@@ -160,6 +161,52 @@ class TransactionAnalyzer {
         categoryTrends = {};
       }
 
+      // Calculate budget status for each active budget
+      const Budget = getBudget();
+      const budgets = await Budget.find({ user: userId, isActive: true });
+
+      const budgetStatuses = await Promise.all(
+        budgets.map(async (budget) => {
+          const now = new Date();
+          let periodStart;
+
+          switch (budget.period) {
+            case 'weekly':
+              periodStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              break;
+            case 'monthly':
+              periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+              break;
+            case 'yearly':
+              periodStart = new Date(now.getFullYear(), 0, 1);
+              break;
+            default:
+              periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          }
+
+          const periodExpenses = allExpenses.filter(exp =>
+            exp.category === budget.category &&
+            new Date(exp.date) >= periodStart
+          );
+
+          const spent = periodExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+          const remaining = budget.amount - spent;
+          const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+
+          return {
+            id: budget._id,
+            category: budget.category,
+            budgetAmount: budget.amount,
+            spent: parseFloat(spent.toFixed(2)),
+            remaining: parseFloat(remaining.toFixed(2)),
+            percentage: parseFloat(percentage.toFixed(1)),
+            period: budget.period,
+            alerts: budget.alerts.enabled ? budget.alerts.thresholds : [],
+            status: percentage >= 100 ? 'exceeded' : percentage >= 80 ? 'warning' : 'good'
+          };
+        })
+      );
+
       return {
         totalExpenses: allExpenses.length,
         expenses: allExpenses.slice(0, 20).map(exp => ({
@@ -197,6 +244,7 @@ class TransactionAnalyzer {
           goals: user.profile?.goals || [],
           age: user.profile?.age || null,
         },
+        budgets: budgetStatuses,
       };
     } catch (err) {
       console.error('Transaction Analyzer Error:', err);

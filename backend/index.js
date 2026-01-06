@@ -80,6 +80,10 @@ try {
   app.use('/api/expenses', require('./routes/expenses'));
   console.log('✅ Expenses routes loaded');
   
+  console.log('Loading budget routes...');
+  app.use('/api/budgets', require('./routes/budgets'));
+  console.log('✅ Budget routes loaded');
+  
   console.log('Loading ai routes...');
   app.use('/api/ai', require('./routes/ai'));
   console.log('✅ AI routes loaded');

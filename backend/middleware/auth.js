@@ -3,6 +3,9 @@ const getUser = () => require('../models/User')();
 
 const auth = async (req, res, next) => {
   try {
+    console.log(`🔵 AUTH MIDDLEWARE - ${req.method} ${req.path}`);
+    console.log('req.isAuthenticated:', typeof req.isAuthenticated);
+    
     // Check if user is authenticated via Passport session
     if (req.isAuthenticated && req.isAuthenticated()) {
       console.log('✅ User authenticated via Passport session');

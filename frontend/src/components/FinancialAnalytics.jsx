@@ -402,21 +402,21 @@ const FinancialAnalytics = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 
                 {/* Savings Rate */}
-                <div className={`p-6 rounded-2xl shadow-md hover:shadow-lg transition border ${
+                <div className={`p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all border-2 ${
                   isDark
-                    ? 'bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-700/30 hover:border-green-600/50'
-                    : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
+                    ? 'bg-gradient-to-br from-emerald-900 to-emerald-800 border-emerald-700 hover:border-emerald-600'
+                    : 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300'
                 }`}>
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className={`text-lg font-bold ${isDark ? 'text-green-300' : 'text-gray-900'}`}>
+                    <h4 className={`text-lg font-bold ${isDark ? 'text-emerald-200' : 'text-emerald-900'}`}>
                       Savings Rate
                     </h4>
-                    <span className="text-2xl">💰</span>
+                    <span className="text-3xl">💰</span>
                   </div>
-                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
                     {renderSafeValue(data.kpis?.savingsRate?.rate, 0)}%
                   </div>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-green-300' : 'text-gray-600'}`}>
+                  <p className={`text-sm mb-4 font-medium ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>
                     {(() => {
                       const status = data.kpis?.savingsRate?.status;
                       if (status === 'excellent') return '✓ Excellent';
@@ -425,30 +425,30 @@ const FinancialAnalytics = () => {
                       return '✗ Low';
                     })()}
                   </p>
-                  <div className={`w-full rounded-full h-3 ${isDark ? 'bg-green-900/30' : 'bg-gray-200'}`}>
+                  <div className={`w-full rounded-full h-2.5 ${isDark ? 'bg-emerald-900' : 'bg-emerald-200'} border border-emerald-400/50`}>
                     <div 
-                      className="bg-green-500 rounded-full h-3 transition-all shadow-lg" 
+                      className="bg-emerald-500 rounded-full h-2.5 transition-all shadow-lg" 
                       style={{ width: `${Math.min(renderSafeValue(data.kpis?.savingsRate?.rate, 0), 100)}%` }}
                     ></div>
                   </div>
                 </div>
 
                 {/* Expense Ratio */}
-                <div className={`p-6 rounded-2xl shadow-md hover:shadow-lg transition border ${
+                <div className={`p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all border-2 ${
                   isDark
-                    ? 'bg-gradient-to-br from-orange-900/30 to-orange-800/30 border-orange-700/30 hover:border-orange-600/50'
-                    : 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200'
+                    ? 'bg-gradient-to-br from-amber-900 to-orange-800 border-amber-700 hover:border-amber-600'
+                    : 'bg-gradient-to-br from-amber-50 to-orange-100 border-amber-300'
                 }`}>
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className={`text-lg font-bold ${isDark ? 'text-orange-300' : 'text-gray-900'}`}>
+                    <h4 className={`text-lg font-bold ${isDark ? 'text-amber-200' : 'text-amber-900'}`}>
                       Expense Ratio
                     </h4>
-                    <span className="text-2xl">📊</span>
+                    <span className="text-3xl">📊</span>
                   </div>
-                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
                     {renderSafeValue(data.kpis?.expenseRatio?.ratio, 0)}%
                   </div>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-orange-300' : 'text-gray-600'}`}>
+                  <p className={`text-sm mb-4 font-medium ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>
                     {(() => {
                       const status = data.kpis?.expenseRatio?.status;
                       if (status === 'excellent' || status === 'healthy') return '✓ Healthy';
@@ -457,61 +457,67 @@ const FinancialAnalytics = () => {
                       return '✗ High';
                     })()}
                   </p>
-                  <div className={`w-full rounded-full h-3 ${isDark ? 'bg-orange-900/30' : 'bg-gray-200'}`}>
+                  <div className={`w-full rounded-full h-2.5 ${isDark ? 'bg-amber-900' : 'bg-amber-200'} border border-amber-400/50`}>
                     <div 
-                      className="bg-orange-500 rounded-full h-3 transition-all shadow-lg" 
+                      className="bg-amber-500 rounded-full h-2.5 transition-all shadow-lg" 
                       style={{ width: `${Math.min(renderSafeValue(data.kpis?.expenseRatio?.ratio, 0), 100)}%` }}
                     ></div>
                   </div>
                 </div>
 
                 {/* Monthly Spending */}
-                <div className={`p-6 rounded-2xl shadow-md hover:shadow-lg transition border ${
+                <div className={`p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all border-2 ${
                   isDark
-                    ? 'bg-gradient-to-br from-blue-900/30 to-blue-800/30 border-blue-700/30 hover:border-blue-600/50'
-                    : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'
+                    ? 'bg-gradient-to-br from-sky-900 to-blue-800 border-sky-700 hover:border-sky-600'
+                    : 'bg-gradient-to-br from-sky-50 to-blue-100 border-sky-300'
                 }`}>
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className={`text-lg font-bold ${isDark ? 'text-blue-300' : 'text-gray-900'}`}>
+                    <h4 className={`text-lg font-bold ${isDark ? 'text-sky-200' : 'text-sky-900'}`}>
                       Monthly Avg
                     </h4>
-                    <span className="text-2xl">📈</span>
+                    <span className="text-3xl">📝</span>
                   </div>
-                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-sky-300' : 'text-sky-700'}`}>
                     ₹{(data.analysis?.totalSpent || 0).toLocaleString('en-IN')}
                   </div>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-blue-300' : 'text-gray-600'}`}>
+                  <p className={`text-sm mb-4 font-medium ${isDark ? 'text-sky-200' : 'text-sky-700'}`}>
                     Total spending
                   </p>
-                  <div className={`w-full rounded-full h-3 ${isDark ? 'bg-blue-900/30' : 'bg-gray-200'}`}>
+                  <div className={`w-full rounded-full h-2.5 ${isDark ? 'bg-sky-900' : 'bg-sky-200'} border border-sky-400/50`}>
                     <div 
-                      className="bg-blue-500 rounded-full h-3 shadow-lg" 
+                      className="bg-sky-500 rounded-full h-2.5 shadow-lg" 
                       style={{ width: `${Math.min((renderSafeValue(data.kpis?.expenseRatio?.ratio, 0)), 100)}%` }}
                     ></div>
                   </div>
                 </div>
 
                 {/* Health Score */}
-                <div className={`p-6 rounded-2xl shadow-md hover:shadow-lg transition border ${
+                <div className={`p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all border-2 ${
                   isDark
-                    ? 'bg-gradient-to-br from-purple-900/30 to-purple-800/30 border-purple-700/30 hover:border-purple-600/50'
-                    : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
+                    ? 'bg-gradient-to-br from-fuchsia-900 to-purple-800 border-fuchsia-700 hover:border-fuchsia-600'
+                    : 'bg-gradient-to-br from-fuchsia-50 to-purple-100 border-fuchsia-300'
                 }`}>
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className={`text-lg font-bold ${isDark ? 'text-purple-300' : 'text-gray-900'}`}>
-                      Health Score
+                    <h4 className={`text-lg font-bold ${isDark ? 'text-fuchsia-200' : 'text-fuchsia-900'}`}>
+                      Financial Health
                     </h4>
-                    <span className="text-2xl">❤️</span>
+                    <span className="text-3xl">🏥</span>
                   </div>
-                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-                    {data.overallScore ?? 0}
+                  <div className={`text-4xl font-bold mb-2 ${isDark ? 'text-fuchsia-300' : 'text-fuchsia-700'}`}>
+                    {data.overallScore ?? 0}/100
                   </div>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-purple-300' : 'text-gray-600'}`}>
-                    {data.overallScore >= 80 ? '✓ Excellent' : data.overallScore >= 60 ? '• Good' : '✗ Needs Work'}
+                  <p className={`text-sm mb-4 font-medium ${isDark ? 'text-fuchsia-200' : 'text-fuchsia-700'}`}>
+                    {(() => {
+                      const score = data.overallScore ?? 0;
+                      if (score >= 80) return '✓ Excellent';
+                      if (score >= 60) return '✓ Good';
+                      if (score >= 40) return '• Fair';
+                      return '⚠ Need Help';
+                    })()}
                   </p>
-                  <div className={`w-full rounded-full h-3 ${isDark ? 'bg-purple-900/30' : 'bg-gray-200'}`}>
+                  <div className={`w-full rounded-full h-2.5 ${isDark ? 'bg-fuchsia-900' : 'bg-fuchsia-200'} border border-fuchsia-400/50`}>
                     <div 
-                      className="bg-purple-500 rounded-full h-3 transition-all shadow-lg" 
+                      className="bg-fuchsia-500 rounded-full h-2.5 transition-all shadow-lg" 
                       style={{ width: `${Math.min(data.overallScore ?? 0, 100)}%` }}
                     ></div>
                   </div>

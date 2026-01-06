@@ -163,6 +163,43 @@ class RuleEngine {
       }
     }
 
+    // Rule 8: Budget Alerts
+    if (analysis.budgets && analysis.budgets.length > 0) {
+      analysis.budgets.forEach(budget => {
+        if (budget.status === 'exceeded') {
+          alerts.push({
+            type: 'BUDGET_EXCEEDED',
+            severity: 'high',
+            message: `You've exceeded your ${budget.category} budget by ${userProfile.currency}${(budget.spent - budget.budgetAmount).toFixed(2)}. Review your spending.`,
+          });
+        } else if (budget.status === 'warning') {
+          alerts.push({
+            type: 'BUDGET_WARNING',
+            severity: 'medium',
+            message: `You're at ${budget.percentage}% of your ${budget.category} budget. Consider reducing spending in this category.`,
+          });
+        }
+
+        // Add insights for budget performance
+        if (budget.percentage < 50) {
+          insights.push(`Great job staying under budget for ${budget.category} (${budget.percentage}% used)`);
+        }
+      });
+
+      recommendations.push({
+        priority: 'medium',
+        title: 'Monitor Budgets',
+        description: `You have ${analysis.budgets.length} active budget(s). Regular monitoring helps maintain financial discipline.`,
+      });
+    } else {
+      // No budgets set - recommend setting them up
+      recommendations.push({
+        priority: 'high',
+        title: 'Set Up Budgets',
+        description: 'Create category budgets to track spending and prevent overspending. Start with your highest spending categories.',
+      });
+    }
+
     // Remove duplicates from insights
     const uniqueInsights = [...new Set(insights)];
 
