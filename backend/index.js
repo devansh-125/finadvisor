@@ -45,6 +45,11 @@ const getMongoose = () => {
 // Check if running in production
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Trust proxy - required for secure cookies behind Render's reverse proxy
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
@@ -54,21 +59,36 @@ app.use(express.json());
 // Get MongoDB URI first (needed for session store)
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/finadvisor';
 
-// Configure session middleware - use memory store for now (can switch to MongoDB after connection)
-app.use(session({
+// Configure session middleware with MongoDB store for production
+const MongoStore = require('connect-mongo');
+
+const sessionConfig = {
   name: 'finadvisor.sid',
-  secret: process.env.JWT_SECRET || 'secret',
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'secret',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false, // Changed to false - don't create session until something stored
   cookie: {
     secure: isProduction, // true in production with HTTPS
     httpOnly: true,
     sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-origin in production, 'lax' for development
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    path: '/'
+    path: '/',
+    domain: undefined // Let the browser handle the domain
   }
-}));
-console.log('✅ Session middleware configured (memory store)');
+};
+
+// Use MongoDB store in production for session persistence
+if (isProduction && mongoURI) {
+  sessionConfig.store = MongoStore.create({
+    mongoUrl: mongoURI,
+    ttl: 24 * 60 * 60, // 1 day
+    autoRemove: 'native'
+  });
+  console.log('✅ Using MongoDB session store');
+}
+
+app.use(session(sessionConfig));
+console.log('✅ Session middleware configured');
 app.use(passport.initialize());
 app.use(passport.session());
 
