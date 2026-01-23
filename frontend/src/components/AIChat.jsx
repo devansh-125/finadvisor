@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { API_URL } from '../config';
 
 const AIChat = () => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDarkMode: isDark, toggleTheme } = useTheme();
   const [messages, setMessages] = useState([
     {
       id: 1,

@@ -7,7 +7,7 @@ import { API_URL } from '../config';
 
 const Profile = () => {
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDarkMode: isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [, setProfile] = useState(null);
   const [formData, setFormData] = useState({

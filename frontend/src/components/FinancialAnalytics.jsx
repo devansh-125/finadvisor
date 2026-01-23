@@ -6,7 +6,7 @@ import { API_URL } from '../config';
 
 const FinancialAnalytics = () => {
   const { user, loading: authLoading } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDarkMode: isDark, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);

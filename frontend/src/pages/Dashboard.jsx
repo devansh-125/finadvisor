@@ -12,7 +12,7 @@ import BudgetList from '../components/BudgetList';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDarkMode: isDark, toggleTheme } = useTheme();
   const [expenses, setExpenses] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);

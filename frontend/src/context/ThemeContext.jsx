@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useLayoutEffect } from 'react';
 
 const ThemeContext = createContext();
 
@@ -10,23 +10,32 @@ export const useTheme = () => {
   return context;
 };
 
-export const ThemeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check localStorage or system preference
+// Get initial theme from localStorage or system preference
+const getInitialTheme = () => {
+  if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('darkMode');
     if (saved !== null) {
       return JSON.parse(saved);
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  }
+  return false;
+};
 
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+export const ThemeProvider = ({ children }) => {
+  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
+
+  // Use useLayoutEffect to apply theme before paint (prevents flash)
+  useLayoutEffect(() => {
+    const root = document.documentElement;
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
+      root.style.colorScheme = 'dark';
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
     }
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
   const toggleTheme = () => {

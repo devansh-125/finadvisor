@@ -12,7 +12,7 @@ class FinancialDataService {
       alphaVantage: process.env.ALPHA_VANTAGE_API_KEY,
       financialModelingPrep: process.env.FMP_API_KEY,
       newsApi: process.env.NEWS_API_KEY,
-      exchangerate: process.env.EXCHANGE_RATE_API_KEY
+      freeCurrencyApi: process.env.FREE_CURRENCY_API_KEY
     };
 
     this.cache = new Map();
@@ -195,22 +195,22 @@ class FinancialDataService {
       return this.cache.get(cacheKey);
     }
 
-    if (!this.apiKeys.exchangerate) {
-      throw new Error('Exchange rate API key not configured');
+    if (!this.apiKeys.freeCurrencyApi) {
+      throw new Error('FreeCurrencyAPI key not configured');
     }
 
     try {
-      const response = await axios.get(`https://api.exchangerate-api.com/v4/latest/${baseCurrency}`, {
+      const response = await axios.get(`https://api.freecurrencyapi.com/v1/latest`, {
         params: {
-          key: this.apiKeys.exchangerate
+          apikey: this.apiKeys.freeCurrencyApi,
+          base_currency: baseCurrency
         }
       });
 
       const result = {
         base: baseCurrency,
-        rates: response.data.rates,
-        timestamp: new Date(),
-        date: response.data.date
+        rates: response.data.data,
+        timestamp: new Date()
       };
 
       this.cache.set(cacheKey, result);

@@ -7,7 +7,7 @@ import BudgetForm from './BudgetForm';
 
 const BudgetList = () => {
   const { user } = useAuth();
-  const { isDark } = useTheme();
+  const { isDarkMode: isDark } = useTheme();
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

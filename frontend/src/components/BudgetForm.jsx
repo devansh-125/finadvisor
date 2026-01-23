@@ -6,7 +6,7 @@ import { API_URL } from '../config';
 
 const BudgetForm = ({ budget, onSave, onCancel }) => {
   const { user } = useAuth();
-  const { isDark } = useTheme();
+  const { isDarkMode: isDark } = useTheme();
   const [formData, setFormData] = useState({
     category: budget?.category || '',
     amount: budget?.amount || '',
