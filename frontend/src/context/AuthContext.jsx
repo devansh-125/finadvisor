@@ -2,65 +2,52 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
-// Configure axios to always send credentials
-axios.defaults.withCredentials = true;
-
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// Helper to get stored token
+const getStoredToken = () => localStorage.getItem('authToken');
+
+// Helper to set auth header
+const setAuthHeader = (token) => {
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common['Authorization'];
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(getStoredToken());
 
   useEffect(() => {
-    // Check if this is an OAuth redirect
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user');
-    
-    if (userId) {
-      // OAuth redirect - wait for session cookie to be set
-      console.log('🔵 OAuth redirect detected, userId:', userId);
-      console.log('🔵 Cookies:', document.cookie);
-      
-      // Try multiple times to fetch user (cookie might take a moment)
-      let attempts = 0;
-      const maxAttempts = 5;
-      const tryFetchUser = async () => {
-        attempts++;
-        console.log(`🔄 Fetching user attempt ${attempts}/${maxAttempts}...`);
-        const success = await fetchUser();
-        // Clean up URL after successful fetch or max attempts
-        if (success || attempts >= maxAttempts) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (attempts < maxAttempts) {
-          // Retry after a delay
-          setTimeout(tryFetchUser, 300);
-        }
-      };
-      
-      // Start fetching after a short delay
-      setTimeout(tryFetchUser, 200);
-    } else {
-      // Normal page load
+    // Set auth header if token exists
+    if (token) {
+      setAuthHeader(token);
       fetchUser();
+    } else {
+      setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   const fetchUser = async () => {
+    const storedToken = getStoredToken();
+    if (!storedToken) {
+      setUser(null);
+      setLoading(false);
+      return false;
+    }
+
     try {
-      console.log('🔍 Fetching user from /api/auth/user...');
-      console.log('🔍 Cookies being sent:', document.cookie);
+      console.log('🔍 Fetching user with token...');
+      setAuthHeader(storedToken);
       
-      const res = await axios.get(`${API_URL}/api/auth/user`, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const res = await axios.get(`${API_URL}/api/auth/user`);
       
       console.log('✅ User fetched successfully:', res.data);
-      console.log('✅ Response headers:', res.headers);
       
       if (res.data && res.data._id) {
         setUser(res.data);
@@ -74,19 +61,33 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('❌ Failed to fetch user:', err.message);
-      console.error('❌ Error details:', err.response?.data || err.message);
+      // Token might be invalid, clear it
+      localStorage.removeItem('authToken');
+      setAuthHeader(null);
       setUser(null);
       setLoading(false);
       return false;
     }
   };
 
+  const handleAuthCallback = (newToken) => {
+    console.log('🔑 Storing auth token');
+    localStorage.setItem('authToken', newToken);
+    setToken(newToken);
+    setAuthHeader(newToken);
+  };
+
   const logout = () => {
-    window.location.href = `${API_URL}/api/auth/logout`;
+    console.log('🚪 Logging out...');
+    localStorage.removeItem('authToken');
+    setAuthHeader(null);
+    setToken(null);
+    setUser(null);
+    window.location.href = '/login';
   };
 
   return (
-    <AuthContext.Provider value={{ user, logout, loading, fetchUser }}>
+    <AuthContext.Provider value={{ user, logout, loading, fetchUser, handleAuthCallback, token }}>
       {children}
     </AuthContext.Provider>
   );

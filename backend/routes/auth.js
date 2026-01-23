@@ -1,7 +1,45 @@
 const express = require('express');
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
 const getUser = () => require('../models/User')();
 const router = express.Router();
+
+// JWT secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Middleware to verify JWT token
+const verifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    
+    if (!token) {
+      // Fallback to session auth
+      if (req.isAuthenticated()) {
+        return next();
+      }
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const User = getUser();
+    const user = await User.findById(decoded.userId);
+    
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('Token verification error:', err.message);
+    // Fallback to session auth
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+};
 
 const auth = (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -19,9 +57,6 @@ router.get('/google',
 router.get('/google/callback',
   (req, res, next) => {
     console.log('🔵 Google OAuth callback received');
-    console.log('Query params:', req.query);
-    console.log('Session ID:', req.sessionID);
-    console.log('Has session:', !!req.session);
     next();
   },
   passport.authenticate('google', { 
@@ -29,99 +64,65 @@ router.get('/google/callback',
     session: true
   }),
   (req, res) => {
-    // passport.authenticate already calls req.login() automatically on success
     console.log('✅ Passport authentication successful');
     console.log('User ID:', req.user?._id);
-    console.log('User Email:', req.user?.email);
-    console.log('Session ID:', req.sessionID);
-    console.log('Is authenticated:', req.isAuthenticated());
-    console.log('Session passport user:', req.session?.passport?.user);
     
     if (!req.user) {
       console.error('❌ No user found after authentication');
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=no_user`);
     }
 
-    if (!req.isAuthenticated()) {
-      console.error('❌ User not authenticated after passport.authenticate');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=not_authenticated`);
-    }
-
-    // Ensure session is persisted
-    req.session.userId = req.user._id.toString();
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ Session save error:', err);
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=session_error`);
-      }
-      
-      console.log('✅ Session saved successfully');
-      console.log('Session ID:', req.sessionID);
-      console.log('Session passport user:', req.session.passport?.user);
-      console.log('Session cookie config:', {
-        maxAge: req.session.cookie.maxAge,
-        httpOnly: req.session.cookie.httpOnly,
-        secure: req.session.cookie.secure,
-        sameSite: req.session.cookie.sameSite,
-        path: req.session.cookie.path,
-        domain: req.session.cookie.domain
-      });
-      
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-      const redirectUrl = `${frontendUrl}/dashboard?user=` + req.user._id;
-      console.log('🔄 Redirecting to:', redirectUrl);
-      
-      // Check if cookie will be set
-      const cookieHeader = res.getHeader('Set-Cookie');
-      console.log('🍪 Set-Cookie header:', cookieHeader);
-      
-      res.redirect(redirectUrl);
-    });
+    // Generate JWT token for the user
+    const token = jwt.sign(
+      { userId: req.user._id.toString() },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    console.log('✅ JWT token generated');
+    
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    // Pass token in URL - frontend will store it
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${token}`;
+    console.log('🔄 Redirecting to:', redirectUrl);
+    
+    res.redirect(redirectUrl);
   }
 );
 
 // Get current user
-router.get('/user', async (req, res) => {
+router.get('/user', verifyToken, async (req, res) => {
   console.log('🔍 GET /user called');
-  console.log('Session ID:', req.sessionID);
-  console.log('req.isAuthenticated():', req.isAuthenticated());
-  console.log('Cookies:', req.headers.cookie);
   
-  if (req.user) {
-    try {
-      const User = getUser();
-      const user = await User.findById(req.user._id);
-      if (!user) {
-        console.log('❌ User not found in database');
-        return res.status(401).json({ message: 'User not found' });
-      }
-      
-      console.log('✅ User found, sending user data from database');
-      console.log('✅ Profile picture from DB:', user.profilePicture);
-      
-      // Provide fallback avatar if profilePicture is not available
-      const profilePictureUrl = user.profilePicture || 
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&bold=true`;
-      
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        profilePicture: profilePictureUrl,
-        profile: user.profile
-      });
-    } catch (err) {
-      console.error('❌ Error fetching user:', err.message);
-      res.status(500).json({ message: 'Server error' });
+  try {
+    const User = getUser();
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      console.log('❌ User not found in database');
+      return res.status(401).json({ message: 'User not found' });
     }
-  } else {
-    console.log('❌ No user found, returning 401');
-    res.status(401).json({ message: 'Not authenticated' });
+    
+    console.log('✅ User found:', user.email);
+    
+    // Provide fallback avatar if profilePicture is not available
+    const profilePictureUrl = user.profilePicture || 
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&bold=true`;
+    
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profilePicture: profilePictureUrl,
+      profile: user.profile
+    });
+  } catch (err) {
+    console.error('❌ Error fetching user:', err.message);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Get user profile
-router.get('/profile', auth, async (req, res) => {
+router.get('/profile', verifyToken, async (req, res) => {
   try {
     const User = getUser();
     const user = await User.findById(req.user._id);
@@ -147,7 +148,7 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', auth, async (req, res) => {
+router.put('/profile', verifyToken, async (req, res) => {
   try {
     const { age, income, savings, goals, currency } = req.body;
 

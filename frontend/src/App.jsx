@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import AuthCallback from './pages/AuthCallback';
 import './App.css';
 
 // Protected Route Component
@@ -66,6 +67,7 @@ function App() {
                   </PublicRoute>
                 }
               />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route
                 path="/dashboard"
                 element={
