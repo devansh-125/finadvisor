@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
+import { API_URL } from '../config';
 import BudgetForm from './BudgetForm';
 
 const BudgetList = () => {
@@ -18,7 +19,7 @@ const BudgetList = () => {
 
   const fetchBudgets = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/budgets/status/all', { withCredentials: true });
+      const response = await axios.get(`${API_URL}/api/budgets/status/all`, { withCredentials: true });
       setBudgets(response.data);
     } catch (error) {
       console.error('Error fetching budgets:', error);
@@ -27,7 +28,7 @@ const BudgetList = () => {
     }
   };
 
-  const handleSave = (savedBudget) => {
+  const handleSave = () => {
     setShowForm(false);
     setEditingBudget(null);
     fetchBudgets(); // Refresh the list
@@ -42,7 +43,7 @@ const BudgetList = () => {
     if (!confirm('Are you sure you want to delete this budget?')) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/budgets/${budgetId}`, { withCredentials: true });
+      await axios.delete(`${API_URL}/api/budgets/${budgetId}`, { withCredentials: true });
       fetchBudgets(); // Refresh the list
     } catch (error) {
       console.error('Error deleting budget:', error);
@@ -64,6 +65,7 @@ const BudgetList = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getStatusColor = (status) => {
     switch (status) {
       case 'exceeded': return 'text-red-600';
@@ -77,12 +79,12 @@ const BudgetList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Budget Management</h2>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+        <h2 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Budget Management</h2>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-indigo-600 dark:bg-indigo-700 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium transition"
+          className="bg-indigo-600 dark:bg-indigo-700 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium transition touch-manipulation text-sm sm:text-base"
         >
           + Create Budget
         </button>
@@ -116,20 +118,20 @@ const BudgetList = () => {
           </button>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {budgets.map(({ budget, status }) => (
-            <div key={budget._id} className={`rounded-lg shadow-lg p-6 transition hover:shadow-xl ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white'}`}>
-              <div className="flex justify-between items-start mb-5">
-                <div>
-                  <h3 className={`text-xl font-bold capitalize mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <div key={budget._id} className={`rounded-lg shadow-lg p-4 sm:p-6 transition hover:shadow-xl ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white'}`}>
+              <div className="flex justify-between items-start mb-4 sm:mb-5">
+                <div className="min-w-0 flex-1">
+                  <h3 className={`text-lg sm:text-xl font-bold capitalize mb-1 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {budget.category}
                   </h3>
-                  <p className={`text-sm capitalize font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{budget.period} budget</p>
+                  <p className={`text-xs sm:text-sm capitalize font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{budget.period} budget</p>
                 </div>
-                <div className="flex space-x-1">
+                <div className="flex space-x-1 ml-2 flex-shrink-0">
                   <button
                     onClick={() => handleEdit(budget)}
-                    className={`p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
+                    className={`p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition touch-manipulation ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
                     title="Edit budget"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +140,7 @@ const BudgetList = () => {
                   </button>
                   <button
                     onClick={() => handleDelete(budget._id)}
-                    className={`p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition ${isDark ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-800'}`}
+                    className={`p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition touch-manipulation ${isDark ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-800'}`}
                     title="Delete budget"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const ExpenseList = ({ expenses, onExpenseDeleted }) => {
   const [editingId, setEditingId] = useState(null);
@@ -43,7 +44,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
     setError('');
 
     try {
-      await axios.delete(`http://localhost:5000/api/expenses/${expenseId}`, {
+      await axios.delete(`${API_URL}/api/expenses/${expenseId}`, {
         withCredentials: true
       });
 
@@ -85,7 +86,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
     setError('');
 
     try {
-      await axios.put(`http://localhost:5000/api/expenses/${expenseId}`, editData, {
+      await axios.put(`${API_URL}/api/expenses/${expenseId}`, editData, {
         withCredentials: true
       });
 
@@ -183,34 +184,34 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
                 </div>
               </div>
             ) : (
-              // View mode
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${categoryColors[expense.category]}`}>
+              // View mode - Mobile responsive layout
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                    <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${categoryColors[expense.category]}`}>
                       {categoryLabels[expense.category]}
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-xs sm:text-sm text-gray-500">
                       {new Date(expense.date).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">{expense.description}</p>
+                  <p className="text-gray-900 dark:text-gray-100 font-medium text-sm sm:text-base truncate">{expense.description}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(expense.amount)}</p>
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                  <div className="text-left sm:text-right">
+                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(expense.amount)}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3 sm:gap-2">
                     <button
                       onClick={() => handleEditStart(expense)}
-                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
+                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium p-1 sm:p-0 touch-manipulation"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(expense._id)}
                       disabled={loading}
-                      className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 text-sm font-medium disabled:text-gray-400 dark:disabled:text-gray-600"
+                      className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 text-sm font-medium disabled:text-gray-400 dark:disabled:text-gray-600 p-1 sm:p-0 touch-manipulation"
                     >
                       Delete
                     </button>

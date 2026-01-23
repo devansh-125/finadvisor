@@ -6,6 +6,14 @@ export default {
   ],
   darkMode: 'class',
   theme: {
+    screens: {
+      'xs': '375px',    // Small phones
+      'sm': '640px',    // Large phones / small tablets
+      'md': '768px',    // Tablets
+      'lg': '1024px',   // Small laptops
+      'xl': '1280px',   // Desktops
+      '2xl': '1536px',  // Large desktops
+    },
     extend: {
       animation: {
         fadeIn: 'fadeIn 0.3s ease-in-out',
@@ -28,6 +36,12 @@ export default {
       },
       backdropBlur: {
         'xs': '2px',
+      },
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
       },
     },
   },

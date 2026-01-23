@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const ExpenseForm = ({ onExpenseAdded }) => {
   const [formData, setFormData] = useState({
@@ -39,7 +40,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/expenses', formData, {
+      const response = await axios.post(`${API_URL}/api/expenses`, formData, {
         withCredentials: true
       });
 
@@ -66,9 +67,9 @@ const ExpenseForm = ({ onExpenseAdded }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6 animate-slide-in-up smooth-transition">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-        <span className="text-2xl mr-2 animate-bounce-gentle">➕</span>
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6 mb-6 animate-slide-in-up smooth-transition">
+      <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <span className="text-xl sm:text-2xl mr-2 animate-bounce-gentle">➕</span>
         Add New Expense
       </h2>
 
@@ -99,8 +100,9 @@ const ExpenseForm = ({ onExpenseAdded }) => {
               placeholder="0.00"
               step="0.01"
               min="0"
+              inputMode="decimal"
               required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm"
             />
           </div>
 
@@ -113,7 +115,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm"
             >
               {categories.map(cat => (
                 <option key={cat.value} value={cat.value}>
@@ -134,7 +136,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
             name="date"
             value={formData.date}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm"
           />
         </div>
 
@@ -150,7 +152,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
             placeholder="What did you spend on?"
             required
             rows="3"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm"
           />
         </div>
 
@@ -158,7 +160,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 dark:bg-indigo-700 text-white py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:bg-indigo-400 dark:disabled:bg-indigo-400 transition smooth-transition font-semibold hover:shadow-lg hover:shadow-indigo-500/50 active:scale-95"
+          className="w-full bg-indigo-600 dark:bg-indigo-700 text-white py-3 sm:py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:bg-indigo-400 dark:disabled:bg-indigo-400 transition smooth-transition font-semibold hover:shadow-lg hover:shadow-indigo-500/50 active:scale-95 text-base sm:text-sm touch-manipulation"
         >
           {loading ? (
             <span className="flex items-center justify-center">

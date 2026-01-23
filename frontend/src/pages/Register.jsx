@@ -1,19 +1,21 @@
+import { API_URL } from '../config';
+
 const Register = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 px-4 py-8">
+      <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">FinAdvisor</h1>
-          <h2 className="text-xl font-bold text-gray-700">Create Your Account</h2>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">FinAdvisor</h1>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-700">Create Your Account</h2>
         </div>
 
-        <div className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-lg">
+        <div className="mt-6 sm:mt-8 space-y-6 bg-white p-6 sm:p-8 rounded-lg shadow-lg">
           <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900 mb-6">Get started with Google</h3>
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-6">Get started with Google</h3>
             <div className="flex justify-center">
               <a
-                href="http://localhost:5000/api/auth/google"
-                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
+                href={`${API_URL}/api/auth/google`}
+                className="inline-flex items-center justify-center px-5 sm:px-6 py-3 border border-transparent text-sm sm:text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition touch-manipulation active:scale-95"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -39,7 +41,7 @@ const Register = () => {
           </div>
         </div>
 
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-xs sm:text-sm text-gray-500">
           Quick signup with Google OAuth
         </p>
       </div>

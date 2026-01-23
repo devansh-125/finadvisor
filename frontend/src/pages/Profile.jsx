@@ -3,12 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const Profile = () => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
+  const [, setProfile] = useState(null);
   const [formData, setFormData] = useState({
     age: '',
     income: '',
@@ -41,7 +42,7 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:5000/api/auth/profile', {
+      const res = await axios.get(`${API_URL}/api/auth/profile`, {
         withCredentials: true
       });
       setProfile(res.data);
@@ -104,7 +105,7 @@ const Profile = () => {
     setSuccess('');
 
     try {
-      await axios.put('http://localhost:5000/api/auth/profile', formData, {
+      await axios.put(`${API_URL}/api/auth/profile`, formData, {
         withCredentials: true
       });
       setSuccess('Profile updated successfully!');
@@ -147,18 +148,18 @@ const Profile = () => {
           : 'bg-white/50 border-slate-200/30'
       } sticky top-0 z-40 shadow-lg`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo & Links */}
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-4 sm:gap-8">
               <Link 
                 to="/dashboard" 
-                className={`text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent hover:opacity-80 transition`}
+                className={`text-lg sm:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent hover:opacity-80 transition`}
               >
                 FinAdvisor
               </Link>
               <Link 
                 to="/dashboard" 
-                className={`font-medium transition hover:scale-105 ${
+                className={`font-medium transition hover:scale-105 text-sm sm:text-base ${
                   isDark 
                     ? 'text-slate-300 hover:text-cyan-400' 
                     : 'text-gray-700 hover:text-blue-600'
@@ -169,11 +170,11 @@ const Profile = () => {
             </div>
 
             {/* User Info & Controls */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className={`p-2 rounded-lg transition-all hover:scale-110 ${
+                className={`p-2 rounded-lg transition-all hover:scale-110 touch-manipulation ${
                   isDark
                     ? 'bg-blue-900/50 hover:bg-blue-800/70 text-yellow-300'
                     : 'bg-white/30 hover:bg-white/50 text-gray-700'
@@ -183,8 +184,8 @@ const Profile = () => {
                 {isDark ? '☀️' : '🌙'}
               </button>
 
-              {/* User Profile */}
-              <div className={`flex items-center gap-3 px-4 py-2 rounded-lg ${
+              {/* User Profile - Hidden on very small screens */}
+              <div className={`hidden xs:flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg ${
                 isDark 
                   ? 'bg-slate-800/50 border border-slate-700/30' 
                   : 'bg-white/50 border border-slate-200'
@@ -193,10 +194,10 @@ const Profile = () => {
                   <img 
                     src={user.profilePicture} 
                     alt={user?.name} 
-                    className="h-8 w-8 rounded-full border-2 border-blue-500" 
+                    className="h-6 w-6 sm:h-8 sm:w-8 rounded-full border-2 border-blue-500" 
                   />
                 )}
-                <span className={`font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                <span className={`font-medium text-sm sm:text-base truncate max-w-[100px] sm:max-w-none ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
                   {user?.name}
                 </span>
               </div>
@@ -204,7 +205,7 @@ const Profile = () => {
               {/* Logout Button */}
               <button
                 onClick={logout}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all hover:shadow-lg"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all hover:shadow-lg text-sm sm:text-base touch-manipulation"
               >
                 Logout
               </button>
@@ -214,36 +215,36 @@ const Profile = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
         {/* Profile Header Card */}
-        <div className={`rounded-2xl backdrop-blur-sm transition-all mb-8 ${
+        <div className={`rounded-2xl backdrop-blur-sm transition-all mb-6 sm:mb-8 ${
           isDark
             ? 'bg-gradient-to-r from-slate-800/50 to-slate-700/50 border border-slate-600/30 shadow-2xl'
             : 'bg-white/70 border border-slate-200 shadow-lg'
         }`}>
-          <div className="px-8 py-8">
-            <div className="flex items-center gap-6 mb-6">
-              <div className="relative">
+          <div className="px-4 sm:px-8 py-6 sm:py-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-6 text-center sm:text-left">
+              <div className="relative flex-shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full blur opacity-75 animate-pulse"></div>
                 {user?.profilePicture ? (
                   <img 
                     src={user.profilePicture} 
                     alt={user?.name} 
-                    className="relative h-24 w-24 rounded-full border-4 border-white shadow-lg"
+                    className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-white shadow-lg"
                   />
                 ) : (
-                  <div className="relative h-24 w-24 rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                  <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg">
                     {user?.name?.charAt(0)}
                   </div>
                 )}
               </div>
-              <div>
-                <h1 className={`text-3xl font-bold mb-2 ${
+              <div className="min-w-0">
+                <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}>
                   {user?.name}
                 </h1>
-                <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                <p className={`text-base sm:text-lg truncate ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                   {user?.email}
                 </p>
                 <div className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>

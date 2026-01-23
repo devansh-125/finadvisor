@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const BudgetForm = ({ budget, onSave, onCancel }) => {
   const { user } = useAuth();
@@ -21,8 +22,7 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
     setLoading(true);
 
     try {
-      const baseURL = 'http://localhost:5000';
-      const url = budget ? `${baseURL}/api/budgets/${budget._id}` : `${baseURL}/api/budgets`;
+      const url = budget ? `${API_URL}/api/budgets/${budget._id}` : `${API_URL}/api/budgets`;
       const method = budget ? 'put' : 'post';
 
       const response = await axios({
@@ -63,8 +63,8 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
   };
 
   return (
-    <div className={`${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white'} p-6 rounded-lg shadow-lg`}>
-      <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+    <div className={`${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white'} p-4 sm:p-6 rounded-lg shadow-lg`}>
+      <h3 className={`text-base sm:text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
         {budget ? 'Edit Budget' : 'Create New Budget'}
       </h3>
 
@@ -78,7 +78,7 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
             value={formData.category}
             onChange={handleChange}
             required
-            className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            className={`w-full px-3 py-2.5 sm:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border text-base sm:text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
           >
             <option value="">Select a category</option>
             {categories.map(cat => (
@@ -101,8 +101,9 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
             required
             min="0"
             step="0.01"
+            inputMode="decimal"
             placeholder="Enter budget amount"
-            className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
+            className={`w-full px-3 py-2.5 sm:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border text-base sm:text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
           />
         </div>
 
@@ -114,7 +115,7 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
             name="period"
             value={formData.period}
             onChange={handleChange}
-            className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            className={`w-full px-3 py-2.5 sm:py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border text-base sm:text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
           >
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
@@ -161,18 +162,18 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
           </div>
         )}
 
-        <div className="flex space-x-3 pt-4">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium"
+            className="flex-1 bg-blue-600 text-white py-2.5 sm:py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium touch-manipulation"
           >
             {loading ? 'Saving...' : (budget ? 'Update Budget' : 'Create Budget')}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className={`flex-1 py-2 px-4 rounded-md font-medium focus:outline-none focus:ring-2 ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400 focus:ring-gray-500'}`}
+            className={`flex-1 py-2.5 sm:py-2 px-4 rounded-md font-medium focus:outline-none focus:ring-2 touch-manipulation ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400 focus:ring-gray-500'}`}
           >
             Cancel
           </button>

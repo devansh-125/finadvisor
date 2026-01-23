@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 // Configure axios to always send credentials
 axios.defaults.withCredentials = true;
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔍 Fetching user from /api/auth/user...');
       console.log('🔍 Cookies being sent:', document.cookie);
       
-      const res = await axios.get('http://localhost:5000/api/auth/user', {
+      const res = await axios.get(`${API_URL}/api/auth/user`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json'
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    window.location.href = 'http://localhost:5000/api/auth/logout';
+    window.location.href = `${API_URL}/api/auth/logout`;
   };
 
   return (

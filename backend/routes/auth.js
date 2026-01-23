@@ -25,7 +25,7 @@ router.get('/google/callback',
     next();
   },
   passport.authenticate('google', { 
-    failureRedirect: 'http://localhost:5173/login?error=auth_failed',
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`,
     session: true
   }),
   (req, res) => {
@@ -39,12 +39,12 @@ router.get('/google/callback',
     
     if (!req.user) {
       console.error('❌ No user found after authentication');
-      return res.redirect('http://localhost:5173/login?error=no_user');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=no_user`);
     }
 
     if (!req.isAuthenticated()) {
       console.error('❌ User not authenticated after passport.authenticate');
-      return res.redirect('http://localhost:5173/login?error=not_authenticated');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=not_authenticated`);
     }
 
     // Ensure session is persisted
@@ -52,7 +52,7 @@ router.get('/google/callback',
     req.session.save((err) => {
       if (err) {
         console.error('❌ Session save error:', err);
-        return res.redirect('http://localhost:5173/login?error=session_error');
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=session_error`);
       }
       
       console.log('✅ Session saved successfully');
@@ -67,7 +67,8 @@ router.get('/google/callback',
         domain: req.session.cookie.domain
       });
       
-      const redirectUrl = 'http://localhost:5173/dashboard?user=' + req.user._id;
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const redirectUrl = `${frontendUrl}/dashboard?user=` + req.user._id;
       console.log('🔄 Redirecting to:', redirectUrl);
       
       // Check if cookie will be set
@@ -187,7 +188,7 @@ router.get('/logout', (req, res) => {
     if (err) {
       return res.status(500).json({ message: 'Logout failed' });
     }
-    res.redirect('http://localhost:5173/login');
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`);
   });
 });
 

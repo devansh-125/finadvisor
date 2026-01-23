@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { API_URL } from '../config';
 
 const FinancialAnalytics = () => {
   const { user, loading: authLoading } = useAuth();
@@ -9,7 +10,7 @@ const FinancialAnalytics = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
-  const [error, setError] = useState('');
+  const [, setError] = useState('');
   const [marketData, setMarketData] = useState(null);
   const [newsPage, setNewsPage] = useState(0);
   const [newsFilter, setNewsFilter] = useState('all');
@@ -18,6 +19,7 @@ const FinancialAnalytics = () => {
     if (!authLoading && user) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchData = async () => {
@@ -28,7 +30,7 @@ const FinancialAnalytics = () => {
 
     try {
       // Simple API call for now - will expand later
-      const response = await axios.get('http://localhost:5000/api/ai/health-analysis', { withCredentials: true });
+      const response = await axios.get(`${API_URL}/api/ai/health-analysis`, { withCredentials: true });
       console.log('📊 [FRONTEND] Full response data:', JSON.stringify(response.data, null, 2));
       console.log('📊 [FRONTEND] Categories array:', response.data.analysis?.categories);
       console.log('📊 [FRONTEND] CategoryBreakdown object:', response.data.analysis?.categoryBreakdown);
@@ -61,7 +63,7 @@ const FinancialAnalytics = () => {
     setError('');
 
     try {
-      const response = await axios.get('http://localhost:5000/api/ai/market-data');
+      const response = await axios.get(`${API_URL}/api/ai/market-data`);
       setMarketData(response.data);
     } catch (err) {
       console.error('Error fetching market data:', err);
@@ -137,16 +139,16 @@ const FinancialAnalytics = () => {
         : 'bg-white'
     }`}>
       {/* Header */}
-      <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 transition-all relative overflow-hidden`}>
+      <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 transition-all relative overflow-hidden`}>
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
-        <div className="relative z-10 flex justify-between items-start">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Financial Analytics Dashboard</h2>
-            <p className="text-blue-100">Advanced insights into your financial health</p>
+            <h2 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">Financial Analytics Dashboard</h2>
+            <p className="text-blue-100 text-sm sm:text-base">Advanced insights into your financial health</p>
           </div>
           <button
             onClick={toggleTheme}
-            className={`p-2 rounded-lg transition-all hover:scale-110 ${
+            className={`p-2 rounded-lg transition-all hover:scale-110 touch-manipulation self-end sm:self-auto ${
               isDark
                 ? 'bg-blue-800/50 hover:bg-blue-700/70 text-yellow-300'
                 : 'bg-white/30 hover:bg-white/50 text-white'
@@ -159,17 +161,17 @@ const FinancialAnalytics = () => {
       </div>
 
       {/* Tabs */}
-      <div className={`border-b transition-colors ${
+      <div className={`border-b transition-colors overflow-x-auto scrollbar-hide ${
         isDark 
           ? 'border-slate-700 bg-slate-700/50' 
           : 'border-slate-200 bg-slate-50'
       }`}>
-        <nav className="flex space-x-8 px-6">
+        <nav className="flex space-x-4 sm:space-x-8 px-4 sm:px-6 min-w-max">
           {['overview', 'kpis', 'recommendations', 'market'].map((tab) => (
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
-              className={`py-4 px-1 border-b-2 font-medium text-sm capitalize transition-all ${
+              className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm capitalize transition-all whitespace-nowrap touch-manipulation ${
                 activeTab === tab
                   ? `border-blue-500 ${isDark ? 'text-blue-400' : 'text-blue-600'}`
                   : `border-transparent ${isDark ? 'text-slate-400 hover:text-slate-300' : 'text-gray-500 hover:text-gray-700'}`
@@ -182,10 +184,10 @@ const FinancialAnalytics = () => {
       </div>
 
       {/* Content */}
-      <div className={`p-6 transition-colors ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+      <div className={`p-4 sm:p-6 transition-colors ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
         {activeTab === 'overview' && (
-          <div className="space-y-6">
-            <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <div className="space-y-4 sm:space-y-6">
+            <h3 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Financial Health Overview
             </h3>
             

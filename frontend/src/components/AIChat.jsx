@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '../context/ThemeContext';
+import { API_URL } from '../config';
 
 const AIChat = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -30,7 +31,7 @@ const AIChat = () => {
 
   const fetchHistory = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/ai/history', { withCredentials: true });
+      const response = await axios.get(`${API_URL}/api/ai/history`, { withCredentials: true });
       setHistory(response.data.conversations || []);
     } catch (err) {
       console.error('Error fetching history:', err);
@@ -41,7 +42,7 @@ const AIChat = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.get(`http://localhost:5000/api/ai/history/${id}`, { withCredentials: true });
+      const response = await axios.get(`${API_URL}/api/ai/history/${id}`, { withCredentials: true });
       setConversationId(id);
       
       // Transform backend messages to frontend format
@@ -88,7 +89,7 @@ const AIChat = () => {
     if (!window.confirm('Are you sure you want to delete this chat?')) return;
     
     try {
-      await axios.delete(`http://localhost:5000/api/ai/history/${id}`, { withCredentials: true });
+      await axios.delete(`${API_URL}/api/ai/history/${id}`, { withCredentials: true });
       setHistory(prev => prev.filter(item => item._id !== id));
       if (conversationId === id) {
         startNewChat();
@@ -175,7 +176,7 @@ const AIChat = () => {
 
     try {
       // Send question to AI backend
-      const response = await axios.post('http://localhost:5000/api/ai/query',
+      const response = await axios.post(`${API_URL}/api/ai/query`,
         { 
           question: input,
           conversationId: conversationId 
@@ -204,13 +205,11 @@ const AIChat = () => {
       
       // Get detailed error information from backend
       let errorContent = '';
-      let errorTitle = 'Error';
       
       if (err.response?.data?.error) {
         // New format with detailed error info
         const errorData = err.response.data.error;
-        errorTitle = `${errorTitle}: ${errorData.code}`;
-        errorContent = `**Error:** ${errorData.message}\n\n`;
+        errorContent = `**Error (${errorData.code}):** ${errorData.message}\n\n`;
         if (errorData.details) {
           errorContent += `**Details:** ${errorData.details}\n\n`;
         }
@@ -237,6 +236,7 @@ const AIChat = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const clearChat = () => {
     setMessages([
       {
@@ -262,7 +262,7 @@ const AIChat = () => {
     >
       {/* Sidebar - Your Chats */}
       <div className={`${
-        isSidebarOpen ? 'w-64' : 'w-0'
+        isSidebarOpen ? 'w-full sm:w-64 absolute sm:relative z-20 h-full' : 'w-0'
       } transition-all duration-300 overflow-hidden flex flex-col border-r ${
         isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
       }`}>
@@ -328,9 +328,9 @@ const AIChat = () => {
         {/* Sidebar Toggle Button (Mobile/Collapsed) */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full shadow-lg transition-all ${
+          className={`absolute left-2 sm:left-4 z-30 p-2 sm:p-2 rounded-full shadow-lg transition-all ${
             isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-600'
-          } ${isSidebarOpen ? 'translate-x-64' : 'translate-x-0'}`}
+          } ${isSidebarOpen ? 'sm:translate-x-64' : 'translate-x-0'} touch-manipulation`}
           style={{ top: '80px' }}
         >
           {isSidebarOpen ? '◀' : '▶'}
@@ -341,23 +341,23 @@ const AIChat = () => {
           isDark
             ? 'bg-gradient-to-r from-blue-900/50 to-blue-800/50 border-blue-700/30 shadow-2xl'
             : 'bg-gradient-to-r from-blue-600/90 to-blue-700/90 border-blue-400/20 shadow-lg'
-        } text-white p-6`}>
+        } text-white p-4 sm:p-6`}>
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <div className="relative">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="relative flex-shrink-0">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full blur opacity-75 animate-pulse"></div>
-                  <div className={`relative w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
+                  <div className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold ${
                     isDark ? 'bg-blue-900' : 'bg-blue-600'
                   }`}>
                     🤖
                   </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent truncate">
                     Financial Advisor AI
                   </h2>
-                  <p className={`text-sm ${isDark ? 'text-blue-200/70' : 'text-blue-100'}`}>
+                  <p className={`text-xs sm:text-sm ${isDark ? 'text-blue-200/70' : 'text-blue-100'} hidden xs:block`}>
                     Powered by GPT-4 Turbo • Real-time financial insights
                   </p>
                 </div>
@@ -365,7 +365,7 @@ const AIChat = () => {
             </div>
             
             {/* Controls */}
-            <div className="flex items-center gap-3 ml-4">
+            <div className="flex items-center gap-2 sm:gap-3 ml-2 sm:ml-4 flex-shrink-0">
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
@@ -396,7 +396,7 @@ const AIChat = () => {
         </div>
 
         {/* Messages Container with Modern Scroll */}
-        <div className={`flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin ${
+        <div className={`flex-1 overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-4 scrollbar-thin ${
           isDark 
             ? 'scrollbar-thumb-blue-700 scrollbar-track-slate-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
             : 'scrollbar-thumb-blue-300 scrollbar-track-slate-100 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100'
@@ -407,7 +407,7 @@ const AIChat = () => {
               className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
             >
               <div
-                className={`max-w-xs lg:max-w-md xl:max-w-lg px-5 py-4 rounded-2xl transition-all hover:shadow-lg ${
+                className={`max-w-[85%] xs:max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-5 py-3 sm:py-4 rounded-2xl transition-all hover:shadow-lg ${
                   message.type === 'user'
                     ? isDark
                       ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-br-none shadow-lg'
@@ -429,26 +429,26 @@ const AIChat = () => {
                   }`}>
                     <ReactMarkdown
                       components={{
-                        h1: ({node, ...props}) => <h1 className="text-lg font-bold mt-3 mb-2" {...props} />,
-                        h2: ({node, ...props}) => <h2 className="text-base font-bold mt-2 mb-1" {...props} />,
-                        h3: ({node, ...props}) => <h3 className="text-sm font-semibold mt-2 mb-1" {...props} />,
-                        p: ({node, ...props}) => <p className="my-1" {...props} />,
-                        ul: ({node, ...props}) => <ul className="list-disc list-inside my-1 space-y-0.5" {...props} />,
-                        ol: ({node, ...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5" {...props} />,
-                        li: ({node, ...props}) => <li className="ml-2" {...props} />,
-                        strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
-                        em: ({node, ...props}) => <em className="italic" {...props} />,
-                        code: ({node, ...props}) => <code className={`px-1.5 py-0.5 rounded text-xs ${
+                        h1: ({...props}) => <h1 className="text-lg font-bold mt-3 mb-2" {...props} />,
+                        h2: ({...props}) => <h2 className="text-base font-bold mt-2 mb-1" {...props} />,
+                        h3: ({...props}) => <h3 className="text-sm font-semibold mt-2 mb-1" {...props} />,
+                        p: ({...props}) => <p className="my-1" {...props} />,
+                        ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5" {...props} />,
+                        ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5" {...props} />,
+                        li: ({...props}) => <li className="ml-2" {...props} />,
+                        strong: ({...props}) => <strong className="font-bold" {...props} />,
+                        em: ({...props}) => <em className="italic" {...props} />,
+                        code: ({...props}) => <code className={`px-1.5 py-0.5 rounded text-xs ${
                           isDark 
                             ? 'bg-slate-900/50 text-cyan-300' 
                             : 'bg-slate-100 text-blue-700'
                         }`} {...props} />,
-                        pre: ({node, ...props}) => <pre className={`p-2 rounded overflow-x-auto text-xs my-1 ${
+                        pre: ({...props}) => <pre className={`p-2 rounded overflow-x-auto text-xs my-1 ${
                           isDark 
                             ? 'bg-slate-900/70 text-cyan-300' 
                             : 'bg-slate-100 text-gray-900'
                         }`} {...props} />,
-                        hr: ({node, ...props}) => <hr className="my-2" {...props} />,
+                        hr: ({...props}) => <hr className="my-2" {...props} />,
                       }}
                     >
                       {message.content}
@@ -525,8 +525,8 @@ const AIChat = () => {
             <div className={`text-sm prose-sm max-w-none ${isDark ? 'text-red-300' : 'text-red-700'}`}>
               <ReactMarkdown
                 components={{
-                  strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
-                  p: ({node, ...props}) => <p className="my-1" {...props} />,
+                  strong: ({...props}) => <strong className="font-bold" {...props} />,
+                  p: ({...props}) => <p className="my-1" {...props} />,
                 }}
               >
                 {error}
@@ -540,15 +540,15 @@ const AIChat = () => {
           isDark
             ? 'bg-slate-800/50 border-slate-700/50'
             : 'bg-white/50 border-slate-200'
-        } p-6 shadow-2xl`}>
-          <div className="flex gap-3">
+        } p-3 sm:p-6 shadow-2xl`}>
+          <div className="flex gap-2 sm:gap-3">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about your finances, goals, or investment strategies..."
+              placeholder="Ask about your finances..."
               disabled={loading}
-              className={`flex-1 px-5 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 ${
+              className={`flex-1 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl transition-all focus:outline-none focus:ring-2 text-sm sm:text-base ${
                 isDark
                   ? 'bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:ring-cyan-500/50 backdrop-blur'
                   : 'bg-white/80 border border-slate-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
@@ -557,7 +557,7 @@ const AIChat = () => {
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105 disabled:scale-100 ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-all hover:scale-105 disabled:scale-100 touch-manipulation ${
                 isDark
                   ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-slate-600 disabled:to-slate-700'
                   : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500'
@@ -578,7 +578,7 @@ const AIChat = () => {
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 sm:mt-4 flex flex-wrap gap-1.5 sm:gap-2">
             <QuickButton
               icon="💡"
               text="Reduce Spending"
@@ -599,6 +599,7 @@ const AIChat = () => {
               onClick={() => setInput('What saving strategy should I follow?')}
               disabled={loading}
               isDark={isDark}
+              className="hidden xs:inline-flex"
             />
             <QuickButton
               icon="🎯"
@@ -606,18 +607,19 @@ const AIChat = () => {
               onClick={() => setInput('How should I invest my surplus?')}
               disabled={loading}
               isDark={isDark}
+              className="hidden sm:inline-flex"
             />
             <button
               type="button"
               onClick={startNewChat}
               disabled={loading}
-              className={`text-xs font-semibold px-3 py-2 rounded-lg transition-all ml-auto ${
+              className={`text-xs font-semibold px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all ml-auto touch-manipulation ${
                 isDark
                   ? 'bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-700/30'
                   : 'bg-red-50 hover:bg-red-100 text-red-700 border border-red-200'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              🗑️ Reset
+              🗑️ <span className="hidden sm:inline">Reset</span>
             </button>
           </div>
         </form>
@@ -626,18 +628,18 @@ const AIChat = () => {
   );
 };
 
-const QuickButton = ({ icon, text, onClick, disabled, isDark }) => (
+const QuickButton = ({ icon, text, onClick, disabled, isDark, className = '' }) => (
   <button
     type="button"
     onClick={onClick}
     disabled={disabled}
-    className={`text-xs font-semibold px-3 py-2 rounded-lg transition-all backdrop-blur-sm ${
+    className={`text-xs font-semibold px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all backdrop-blur-sm touch-manipulation ${
       isDark
         ? 'bg-blue-900/40 hover:bg-blue-900/60 text-blue-200 border border-blue-700/40'
         : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
-    } disabled:opacity-50 disabled:cursor-not-allowed`}
+    } disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
   >
-    {icon} {text}
+    {icon} <span className="hidden xs:inline">{text}</span>
   </button>
 );
 

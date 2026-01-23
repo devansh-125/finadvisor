@@ -42,6 +42,9 @@ const getMongoose = () => {
 };
 
 // Middleware
+// Check if running in production
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
@@ -58,9 +61,9 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: {
-    secure: false, // Set to true in production with HTTPS
+    secure: isProduction, // true in production with HTTPS
     httpOnly: true,
-    sameSite: 'lax', // 'lax' for OAuth redirects
+    sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-origin in production, 'lax' for development
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     path: '/'
   }
