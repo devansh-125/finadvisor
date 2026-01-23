@@ -1,0 +1,31 @@
+# Render Blueprint for FinAdvisor Backend
+# This file configures automatic deployment on Render
+
+services:
+  - type: web
+    name: finadvisor-backend
+    runtime: node
+    region: oregon # or singapore, frankfurt, ohio
+    plan: free # or starter, standard, pro
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/auth/user
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
