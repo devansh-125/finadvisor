@@ -410,9 +410,32 @@ router.get('/market-data', async (req, res) => {
   try {
     const FinancialDataService = getFinancialDataService();
     const financialDataService = new FinancialDataService();
-    const marketData = await financialDataService.getMarketData();
-    const newsData = await financialDataService.getFinancialNews();
-    const exchangeRates = await financialDataService.getExchangeRates();
+    
+    // Fetch data with individual error handling
+    let marketData = { indices: [], economic: {} };
+    let newsData = { news: [] };
+    let exchangeRates = { rates: {} };
+
+    try {
+      marketData = await financialDataService.getMarketData();
+      console.log('✅ Market data fetched successfully');
+    } catch (err) {
+      console.error('⚠️ Market data fetch failed:', err.message);
+    }
+
+    try {
+      newsData = await financialDataService.getFinancialNews();
+      console.log('✅ News data fetched successfully');
+    } catch (err) {
+      console.error('⚠️ News data fetch failed (NewsAPI free tier only works on localhost):', err.message);
+    }
+
+    try {
+      exchangeRates = await financialDataService.getExchangeRates();
+      console.log('✅ Exchange rates fetched successfully');
+    } catch (err) {
+      console.error('⚠️ Exchange rates fetch failed:', err.message);
+    }
 
     res.json({
       success: true,

@@ -9,14 +9,31 @@ export const useAuth = () => useContext(AuthContext);
 // Helper to get stored token
 const getStoredToken = () => localStorage.getItem('authToken');
 
-// Helper to set auth header
-const setAuthHeader = (token) => {
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  } else {
-    delete axios.defaults.headers.common['Authorization'];
+// Setup axios interceptor to always add token
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-};
+);
+
+// Response interceptor to handle auth errors
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.log('🔒 Unauthorized - token may be expired');
+      // Don't auto-logout here, let the component handle it
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -24,9 +41,8 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(getStoredToken());
 
   useEffect(() => {
-    // Set auth header if token exists
+    // Fetch user if token exists
     if (token) {
-      setAuthHeader(token);
       fetchUser();
     } else {
       setLoading(false);
@@ -43,7 +59,6 @@ export const AuthProvider = ({ children }) => {
 
     try {
       console.log('🔍 Fetching user with token...');
-      setAuthHeader(storedToken);
       
       const res = await axios.get(`${API_URL}/api/auth/user`);
       
@@ -63,7 +78,6 @@ export const AuthProvider = ({ children }) => {
       console.error('❌ Failed to fetch user:', err.message);
       // Token might be invalid, clear it
       localStorage.removeItem('authToken');
-      setAuthHeader(null);
       setUser(null);
       setLoading(false);
       return false;
@@ -74,13 +88,11 @@ export const AuthProvider = ({ children }) => {
     console.log('🔑 Storing auth token');
     localStorage.setItem('authToken', newToken);
     setToken(newToken);
-    setAuthHeader(newToken);
   };
 
   const logout = () => {
     console.log('🚪 Logging out...');
     localStorage.removeItem('authToken');
-    setAuthHeader(null);
     setToken(null);
     setUser(null);
     window.location.href = '/login';
