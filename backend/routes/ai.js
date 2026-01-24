@@ -100,6 +100,7 @@ router.post('/query', auth, async (req, res) => {
     const aiService = getOpenAIService();
     const aiResult = await aiService.generateFinancialAdvice(question, analysis, rules, context);
     const aiResponse = aiResult.response;
+    const isFinanceRelated = aiResult.isFinanceRelated; // Get whether question was finance-related
 
     // Handle Conversation Tracking
     let currentConversationId = conversationId;
@@ -126,9 +127,10 @@ router.post('/query', auth, async (req, res) => {
       question,
       response: aiResponse,
       metadata: {
-        totalSpent: analysis.totalSpent,
-        healthScore: rules.summary.overallHealthScore,
-        model: aiResult.model
+        totalSpent: isFinanceRelated ? analysis.totalSpent : null,
+        healthScore: isFinanceRelated ? rules.summary.overallHealthScore : null,
+        model: aiResult.model,
+        isFinanceRelated: isFinanceRelated
       }
     });
     await newQuery.save();

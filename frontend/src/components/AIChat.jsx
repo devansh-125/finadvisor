@@ -463,8 +463,8 @@ const AIChat = () => {
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
 
-                {/* Enhanced Metadata */}
-                {message.metadata && (
+                {/* Enhanced Metadata - Only show for finance-related questions */}
+                {message.metadata && message.metadata.isFinanceRelated && (
                   <div className={`mt-3 pt-3 border-t text-xs space-y-1 ${
                     isDark ? 'border-slate-600 text-slate-300' : 'border-gray-200 text-gray-600'
                   }`}>
@@ -487,6 +487,12 @@ const AIChat = () => {
                         🤖 {message.metadata.model}
                       </p>
                     )}
+                  </div>
+                )}
+                {/* Show only model info for non-finance questions */}
+                {message.metadata && !message.metadata.isFinanceRelated && message.metadata.model && (
+                  <div className={`mt-2 text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    <p>🤖 {message.metadata.model}</p>
                   </div>
                 )}
               </div>

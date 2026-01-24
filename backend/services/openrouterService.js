@@ -98,6 +98,7 @@ Remember the context of previous messages in this conversation and refer back to
         response: response,
         model: 'openai/gpt-4-turbo',
         confidence: 0.95,
+        isFinanceRelated: isFinanceRelated, // Include whether this was a finance question
         metadata: {
           provider: 'openrouter',
           model: 'openai/gpt-4-turbo',
