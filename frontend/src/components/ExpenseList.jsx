@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api/axiosInstance';
 
 const ExpenseList = ({ expenses, onExpenseDeleted }) => {
   const [editingId, setEditingId] = useState(null);
@@ -44,9 +43,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
     setError('');
 
     try {
-      await axios.delete(`${API_URL}/api/expenses/${expenseId}`, {
-        withCredentials: true
-      });
+      await api.delete(`/api/expenses/${expenseId}`);
 
       if (onExpenseDeleted) {
         onExpenseDeleted(expenseId);
@@ -86,9 +83,7 @@ const ExpenseList = ({ expenses, onExpenseDeleted }) => {
     setError('');
 
     try {
-      await axios.put(`${API_URL}/api/expenses/${expenseId}`, editData, {
-        withCredentials: true
-      });
+      await api.put(`/api/expenses/${expenseId}`, editData);
 
       setEditingId(null);
       setEditData({});

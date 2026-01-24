@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosInstance';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '../context/ThemeContext';
-import { API_URL } from '../config';
 
 const AIChat = () => {
   const { isDarkMode: isDark, toggleTheme } = useTheme();
@@ -31,7 +30,7 @@ const AIChat = () => {
 
   const fetchHistory = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/ai/history`, { withCredentials: true });
+      const response = await api.get('/api/ai/history');
       setHistory(response.data.conversations || []);
     } catch (err) {
       console.error('Error fetching history:', err);
@@ -42,7 +41,7 @@ const AIChat = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.get(`${API_URL}/api/ai/history/${id}`, { withCredentials: true });
+      const response = await api.get(`/api/ai/history/${id}`);
       setConversationId(id);
       
       // Transform backend messages to frontend format
@@ -89,7 +88,7 @@ const AIChat = () => {
     if (!window.confirm('Are you sure you want to delete this chat?')) return;
     
     try {
-      await axios.delete(`${API_URL}/api/ai/history/${id}`, { withCredentials: true });
+      await api.delete(`/api/ai/history/${id}`);
       setHistory(prev => prev.filter(item => item._id !== id));
       if (conversationId === id) {
         startNewChat();
@@ -176,12 +175,11 @@ const AIChat = () => {
 
     try {
       // Send question to AI backend
-      const response = await axios.post(`${API_URL}/api/ai/query`,
+      const response = await api.post('/api/ai/query',
         { 
           question: input,
           conversationId: conversationId 
-        },
-        { withCredentials: true }
+        }
       );
 
       // Update conversationId if it was a new chat

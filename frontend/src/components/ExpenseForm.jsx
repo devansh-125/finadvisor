@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api/axiosInstance';
 
 const ExpenseForm = ({ onExpenseAdded }) => {
   const [formData, setFormData] = useState({
@@ -40,9 +39,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
     setSuccess('');
 
     try {
-      const response = await axios.post(`${API_URL}/api/expenses`, formData, {
-        withCredentials: true
-      });
+      const response = await api.post('/api/expenses', formData);
 
       setSuccess('Expense added successfully!');
       setFormData({

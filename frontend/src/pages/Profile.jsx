@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api/axiosInstance';
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -42,9 +41,7 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/api/auth/profile`, {
-        withCredentials: true
-      });
+      const res = await api.get('/api/auth/profile');
       setProfile(res.data);
       setFormData({
         age: res.data.profile?.age || '',
@@ -105,9 +102,7 @@ const Profile = () => {
     setSuccess('');
 
     try {
-      await axios.put(`${API_URL}/api/auth/profile`, formData, {
-        withCredentials: true
-      });
+      await api.put('/api/auth/profile', formData);
       setSuccess('Profile updated successfully!');
       fetchProfile();
       setTimeout(() => setSuccess(''), 3000);

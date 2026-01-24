@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api/axiosInstance';
 import ExpenseForm from '../components/ExpenseForm';
 import ExpenseList from '../components/ExpenseList';
 import AIChat from '../components/AIChat';
@@ -38,7 +37,7 @@ const Dashboard = () => {
 
   const fetchUserCurrency = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/auth/profile`, { withCredentials: true });
+      const response = await api.get('/api/auth/profile');
       if (response.data.currency) {
         setUserCurrency(response.data.currency);
       }
@@ -51,8 +50,8 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const [expensesRes, analyticsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/expenses`, { withCredentials: true }),
-        axios.get(`${API_URL}/api/expenses/analytics/summary`, { withCredentials: true })
+        api.get('/api/expenses'),
+        api.get('/api/expenses/analytics/summary')
       ]);
       setExpenses(expensesRes.data);
       setAnalytics(analyticsRes.data);

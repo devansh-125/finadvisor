@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api/axiosInstance';
 import BudgetForm from './BudgetForm';
 
 const BudgetList = () => {
@@ -19,7 +18,7 @@ const BudgetList = () => {
 
   const fetchBudgets = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/budgets/status/all`, { withCredentials: true });
+      const response = await api.get('/api/budgets/status/all');
       setBudgets(response.data);
     } catch (error) {
       console.error('Error fetching budgets:', error);
@@ -43,7 +42,7 @@ const BudgetList = () => {
     if (!confirm('Are you sure you want to delete this budget?')) return;
 
     try {
-      await axios.delete(`${API_URL}/api/budgets/${budgetId}`, { withCredentials: true });
+      await api.delete(`/api/budgets/${budgetId}`);
       fetchBudgets(); // Refresh the list
     } catch (error) {
       console.error('Error deleting budget:', error);

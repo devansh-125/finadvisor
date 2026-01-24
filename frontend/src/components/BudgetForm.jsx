@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api/axiosInstance';
 
 const BudgetForm = ({ budget, onSave, onCancel }) => {
   const { user } = useAuth();
@@ -22,14 +21,13 @@ const BudgetForm = ({ budget, onSave, onCancel }) => {
     setLoading(true);
 
     try {
-      const url = budget ? `${API_URL}/api/budgets/${budget._id}` : `${API_URL}/api/budgets`;
+      const url = budget ? `/api/budgets/${budget._id}` : '/api/budgets';
       const method = budget ? 'put' : 'post';
 
-      const response = await axios({
+      const response = await api({
         method,
         url,
-        data: formData,
-        withCredentials: true
+        data: formData
       });
 
       onSave(response.data);

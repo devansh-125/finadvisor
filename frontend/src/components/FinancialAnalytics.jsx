@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { API_URL } from '../config';
 
 const FinancialAnalytics = () => {
   const { user, loading: authLoading } = useAuth();
@@ -30,7 +29,7 @@ const FinancialAnalytics = () => {
 
     try {
       // Simple API call for now - will expand later
-      const response = await axios.get(`${API_URL}/api/ai/health-analysis`, { withCredentials: true });
+      const response = await api.get('/api/ai/health-analysis');
       console.log('📊 [FRONTEND] Full response data:', JSON.stringify(response.data, null, 2));
       console.log('📊 [FRONTEND] Categories array:', response.data.analysis?.categories);
       console.log('📊 [FRONTEND] CategoryBreakdown object:', response.data.analysis?.categoryBreakdown);
@@ -63,7 +62,7 @@ const FinancialAnalytics = () => {
     setError('');
 
     try {
-      const response = await axios.get(`${API_URL}/api/ai/market-data`);
+      const response = await api.get('/api/ai/market-data');
       setMarketData(response.data);
     } catch (err) {
       console.error('Error fetching market data:', err);

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api/axiosInstance';
 
 const AuthContext = createContext();
 
@@ -8,39 +7,6 @@ export const useAuth = () => useContext(AuthContext);
 
 // Helper to get stored token
 const getStoredToken = () => localStorage.getItem('authToken');
-
-// Setup axios interceptor to always add token
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor to handle auth errors
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.log('🔒 Unauthorized - clearing invalid token and redirecting to login');
-      // Clear the invalid token
-      localStorage.removeItem('authToken');
-      // Redirect to login if not already there
-      if (!window.location.pathname.includes('/login') && 
-          !window.location.pathname.includes('/auth/callback') &&
-          !window.location.pathname.includes('/register')) {
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -67,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔍 Fetching user with token...');
       
-      const res = await axios.get(`${API_URL}/api/auth/user`);
+      const res = await api.get('/api/auth/user');
       
       console.log('✅ User fetched successfully:', res.data);
       
