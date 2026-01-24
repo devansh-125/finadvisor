@@ -56,41 +56,48 @@ class FinancialDataService {
   }
 
   async getStockIndices() {
-    if (!this.apiKeys.alphaVantage) return [];
+    if (!this.apiKeys.alphaVantage) {
+      console.log('⚠️ Alpha Vantage API key not configured');
+      return [];
+    }
 
     try {
-      const indices = ['SPY', 'QQQ', 'IWM', 'VTI']; // ETF representations of major indices
-      const promises = indices.map(symbol =>
-        axios.get(`https://www.alphavantage.co/query`, {
-          params: {
-            function: 'GLOBAL_QUOTE',
-            symbol: symbol,
-            apikey: this.apiKeys.alphaVantage
-          }
-        })
-      );
-
-      const results = await Promise.allSettled(promises);
-      return results.map((result, index) => {
-        if (result.status === 'fulfilled') {
-          const data = result.value.data['Global Quote'];
-          if (data) {
-            const symbol = indices[index];
-            const name = this.getIndexName(symbol);
-            return {
-              symbol,
-              name,
-              price: parseFloat(data['05. price']) || 0,
-              change: parseFloat(data['09. change']) || 0,
-              changePercent: parseFloat(data['10. change percent'].replace('%', '')) || 0,
-              volume: parseInt(data['06. volume']) || 0
-            };
-          }
+      // Only fetch 1 index to save API calls (free tier: 25/day)
+      const symbol = 'SPY';
+      console.log('📈 Fetching stock index:', symbol);
+      
+      const response = await axios.get(`https://www.alphavantage.co/query`, {
+        params: {
+          function: 'GLOBAL_QUOTE',
+          symbol: symbol,
+          apikey: this.apiKeys.alphaVantage
         }
-        return null;
-      }).filter(item => item !== null);
+      });
+
+      console.log('📈 Alpha Vantage response:', JSON.stringify(response.data));
+
+      // Check for API limit message
+      if (response.data.Note || response.data.Information) {
+        console.log('⚠️ Alpha Vantage API limit reached:', response.data.Note || response.data.Information);
+        return [];
+      }
+
+      const data = response.data['Global Quote'];
+      if (data && data['05. price']) {
+        return [{
+          symbol: 'SPY',
+          name: 'S&P 500',
+          price: parseFloat(data['05. price']) || 0,
+          change: parseFloat(data['09. change']) || 0,
+          changePercent: parseFloat((data['10. change percent'] || '0').replace('%', '')) || 0,
+          volume: parseInt(data['06. volume']) || 0
+        }];
+      }
+      
+      console.log('⚠️ No valid data in Alpha Vantage response');
+      return [];
     } catch (error) {
-      console.error('Error fetching stock indices:', error);
+      console.error('❌ Error fetching stock indices:', error.message);
       return [];
     }
   }
@@ -129,14 +136,17 @@ class FinancialDataService {
   async getFinancialNews(topics = ['finance', 'business', 'economy']) {
     const cacheKey = `news_${topics.join('_')}`;
     if (this.isCacheValid(cacheKey)) {
+      console.log('📰 Returning cached news data');
       return this.cache.get(cacheKey);
     }
 
     if (!this.apiKeys.gnewsApi) {
+      console.log('⚠️ GNews API key not configured');
       throw new Error('GNews API key not configured');
     }
 
     try {
+      console.log('📰 Fetching news from GNews API...');
       // GNews API - works on deployed domains with free tier
       const response = await axios.get('https://gnews.io/api/v4/search', {
         params: {
@@ -147,6 +157,9 @@ class FinancialDataService {
           apikey: this.apiKeys.gnewsApi
         }
       });
+
+      console.log('📰 GNews response status:', response.status);
+      console.log('📰 GNews articles count:', response.data.articles?.length || 0);
 
       const news = (response.data.articles || []).map(article => ({
         title: article.title,
@@ -160,9 +173,13 @@ class FinancialDataService {
 
       const result = { news, timestamp: new Date() };
       this.cache.set(cacheKey, result);
+      console.log('✅ News fetched successfully:', news.length, 'articles');
       return result;
     } catch (error) {
-      console.error('Error fetching financial news from GNews:', error.message);
+      console.error('❌ Error fetching financial news from GNews:', error.message);
+      if (error.response) {
+        console.error('❌ GNews API error response:', error.response.data);
+      }
       throw error;
     }
   }
