@@ -33,29 +33,56 @@ class OpenAIFinancialService {
   }
 
   /**
-   * Check if question needs real-time web search (stock prices, current news, etc.)
+   * Check if question needs real-time web search
+   * Includes: stock prices, product prices, comparisons, news, any "search the web" request
    */
   needsWebSearch(question) {
     const lowerQuestion = question.toLowerCase();
     
     const webSearchPatterns = [
-      // Stock/Market prices
-      /\b(stock|share|market)\s*(price|rate|value|today|current|now|live)/i,
-      /\b(price|rate|value)\s*(of|for).*(stock|share|nse|bse)/i,
-      /\b(today|current|now|live|latest)\s*(price|rate|market|stock)/i,
-      /\b(nse|bse|nasdaq|nyse)\s*(price|rate)/i,
-      // Specific stock symbols
-      /\b(reliance|tcs|infosys|hdfc|icici|sbi|tata|wipro|bharti|itc|kotak)\b.*\b(price|stock|share)/i,
-      /\b(tesla|apple|google|amazon|microsoft|nvidia|meta)\b.*\b(price|stock|share)/i,
-      // Current/today keywords with financial terms
-      /what.*(today|current|now).*(price|rate|stock|market)/i,
-      /tell me.*(today|current|live).*(price|stock|market)/i,
-      // News and updates
-      /\b(latest|recent|today|current)\s*(news|update|announcement)/i,
-      /what.*(happening|news|update).*(market|stock|economy)/i,
+      // ===== EXPLICIT WEB SEARCH REQUESTS =====
+      /\b(check|search|look|find|browse|google|lookup)\s*(it\s*)?(on|the|online|web|internet|for me)/i,
+      /\b(search|browse|lookup|google|find)\s*(for|about|on)/i,
+      /\b(online|web|internet)\s*(search|check|find|lookup|price)/i,
+      /\bsearch\b/i,  // Any mention of "search"
+      
+      // ===== PRODUCT/SHOPPING SEARCHES =====
+      /\b(price|cost|rate)\s*(of|for|on|comparison|compare)/i,
+      /\b(compare|comparison)\s*(price|cost|rate)/i,
+      /\b(lowest|cheapest|best|highest)\s*(price|cost|deal|offer)/i,
+      /\b(where|which)\s*(is|has|to buy|can i).*(cheap|lowest|best|price)/i,
+      /\b(buy|purchase|order)\s*(from|on|at).*(amazon|flipkart|ebay|online)/i,
+      /\b(amazon|flipkart|myntra|ebay|aliexpress|meesho|snapdeal)\b/i,
+      /\b(earbuds?|headphones?|phone|laptop|tv|watch|camera|tablet)\b.*\b(price|cost|buy|cheap)/i,
+      /\b(price|cost|buy|cheap|best).*\b(earbuds?|headphones?|phone|laptop|tv|watch|camera|tablet)\b/i,
+      
+      // ===== STOCK/MARKET PRICES =====
+      /\b(stock|share|market)\s*(price|rate|value|today'?s?|current|now|live)/i,
+      /\b(today'?s?|current|now|live|latest|real-?time)\s*(price|rate|market|stock)/i,
+      /\b(nse|bse|nasdaq|nyse|sensex|nifty)\b/i,
+      
+      // ===== SPECIFIC COMPANIES/STOCKS =====
+      /\b(reliance|tcs|infosys|hdfc|icici|sbi|tata|wipro|bharti|itc|kotak|airtel)\b/i,
+      /\b(tesla|apple|google|amazon|microsoft|nvidia|meta|facebook|netflix)\b/i,
+      /\b(bitcoin|btc|ethereum|eth|crypto|dogecoin|solana)\b/i,
+      
+      // ===== PRICE INQUIRIES =====
+      /\b(what|how much|tell).*(price|cost|rate|worth|value)\b/i,
+      /\btoday'?s?\s*price/i,
+      /\bprice\s*(today|now|current)/i,
+      
+      // ===== NEWS AND UPDATES =====
+      /\b(latest|recent|today|current|breaking)\s*(news|update|announcement|review)/i,
+      /what.*(happening|news|update)/i,
+      
+      // ===== REAL-TIME INFO =====
+      /\b(current|today|now|live|real-?time)\b.*\b(weather|score|result|status)\b/i,
+      /\b(weather|score|result|status)\b.*\b(current|today|now|live)\b/i,
     ];
 
-    return webSearchPatterns.some(pattern => pattern.test(question));
+    const matches = webSearchPatterns.some(pattern => pattern.test(question));
+    // Removed debug log for cleanliness
+    return matches;
   }
 
   async generateFinancialAdvice(question, analysis, rules, context = {}) {
@@ -71,40 +98,28 @@ class OpenAIFinancialService {
       // Detect if the question is finance-related
       const isFinanceRelated = this.isFinanceRelatedQuestion(question);
       
-      // Detect if we need real-time web search
-      const needsRealTimeData = this.needsWebSearch(question);
-      
-      // Choose model based on need
-      // perplexity/sonar-pro has web search for real-time data
-      // openai/gpt-4-turbo is better for personal finance analysis
-      const model = needsRealTimeData ? 'perplexity/sonar-pro' : 'openai/gpt-4-turbo';
-      console.log(`🤖 Using model: ${model} (needsRealTimeData: ${needsRealTimeData})`);
-      
-      const prompt = this.buildPrompt(question, analysis, rules, context, isFinanceRelated, needsRealTimeData);
-      
       // Get conversation history from context (if available)
       const conversationHistory = context.conversationHistory || [];
-      
-      // System prompt for web search model
-      const webSearchPrompt = `You are a financial research assistant with real-time web access.
-
-TASK: Search the web and provide CURRENT, LIVE data for the user's query.
-
-FOR STOCK PRICES:
-- Search for the CURRENT stock price from NSE/BSE India or relevant exchange
-- Include: Current price, today's change (%), day's high/low
-- Mention the time of the data (e.g., "As of 3:30 PM IST")
-- Use reliable sources: NSE India, BSE India, Google Finance, Yahoo Finance
-
-FOR MARKET NEWS:
-- Get the latest news and updates
-- Include dates and sources
+      /**
+       * Dynamically detect if a query should use web search (Perplexity Sonar)
+       * Uses minimal keyword logic, like ChatGPT browsing: if user asks to "search", "find", "look up", "online", "web", "price", "news", "review", or starts with "search web:" or "find online:", use web search.
+       */
+      needsWebSearch(question) {
+        const lower = question.toLowerCase();
+        // Use web search if user asks for it or mentions search/web/price/news/review/etc
+        if (lower.startsWith('search web:') || lower.startsWith('find online:')) return true;
+        const keywords = ['search', 'find', 'look up', 'online', 'web', 'price', 'news', 'review', 'compare', 'cheapest', 'lowest', 'best deal'];
+        return keywords.some(k => lower.includes(k));
+      }
+- Include sources for your information
+- Give comprehensive answers
 
 FORMATTING:
-- Use clear markdown headers
-- Bold important numbers: **₹1,234.56**
-- Include percentage changes with color indicators (📈 for up, 📉 for down)
-- Always cite your sources`;
+- Use clear markdown headers (## for sections)
+- Bold important prices: **₹1,234**
+- Use tables for price comparisons when helpful
+- Use emojis for visual clarity: 🏷️ for deals, 📈📉 for stock changes
+- Always cite your sources at the end`;
 
       // System prompt for personal finance
       const financePrompt = `You are an expert personal financial advisor in the FinAdvisor app.
@@ -201,11 +216,10 @@ Use markdown formatting for clarity.`;
     // EXCLUDE: Questions about external entities (companies, people, general knowledge)
     const externalEntityPatterns = [
       /who is|who are|who was/i,
-      /what is .*(company|stock|tesla|apple|google|amazon|microsoft|reliance|tata)/i,
-      /tell me about .*(him|her|them|it|company|person|ceo|founder)/i,
-      /his |her |their |its /i,  // Referring to someone/something else
-      /(elon|musk|ambani|bezos|gates|zuckerberg|buffett)/i,  // Famous people
-      /^(what|who|when|where|why|how) (is|are|was|were|did|does|do) (the|a|an|this|that)/i,
+      /what is.*(company|stock|tesla|apple|google|amazon|microsoft|reliance|tata)/i,
+      /tell me about.*(him|her|them|it|company|person|ceo|founder)/i,
+      /his|her|their|its/i,
+      /(elon|musk|ambani|bezos|gates|zuckerberg|buffett)/i,
     ];
     
     const isAboutExternalEntity = externalEntityPatterns.some(pattern => 
