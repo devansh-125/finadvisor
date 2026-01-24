@@ -10,6 +10,7 @@ class FinancialDataService {
   constructor() {
     this.apiKeys = {
       alphaVantage: process.env.ALPHA_VANTAGE_API_KEY,
+      finnhub: process.env.FINNHUB_API_KEY,
       financialModelingPrep: process.env.FMP_API_KEY,
       gnewsApi: process.env.GNEWS_API_KEY,
       freeCurrencyApi: process.env.FREE_CURRENCY_API_KEY
@@ -56,15 +57,50 @@ class FinancialDataService {
   }
 
   async getStockIndices() {
+    // Try Finnhub first (60 calls/minute free), fallback to Alpha Vantage
+    if (this.apiKeys.finnhub) {
+      try {
+        console.log('📈 Fetching stock indices from Finnhub...');
+        const symbols = ['SPY', 'QQQ', 'DIA'];
+        const results = [];
+        
+        for (const symbol of symbols) {
+          const response = await axios.get('https://finnhub.io/api/v1/quote', {
+            params: {
+              symbol: symbol,
+              token: this.apiKeys.finnhub
+            }
+          });
+          
+          if (response.data && response.data.c) {
+            results.push({
+              symbol,
+              name: this.getIndexName(symbol),
+              price: response.data.c || 0,
+              change: response.data.d || 0,
+              changePercent: response.data.dp || 0,
+              high: response.data.h || 0,
+              low: response.data.l || 0
+            });
+          }
+        }
+        
+        console.log('✅ Finnhub returned', results.length, 'indices');
+        return results;
+      } catch (error) {
+        console.error('❌ Finnhub error:', error.message);
+      }
+    }
+
+    // Fallback to Alpha Vantage
     if (!this.apiKeys.alphaVantage) {
-      console.log('⚠️ Alpha Vantage API key not configured');
+      console.log('⚠️ No stock API key configured');
       return [];
     }
 
     try {
-      // Only fetch 1 index to save API calls (free tier: 25/day)
       const symbol = 'SPY';
-      console.log('📈 Fetching stock index:', symbol);
+      console.log('📈 Fetching stock index from Alpha Vantage:', symbol);
       
       const response = await axios.get(`https://www.alphavantage.co/query`, {
         params: {
@@ -74,11 +110,8 @@ class FinancialDataService {
         }
       });
 
-      console.log('📈 Alpha Vantage response:', JSON.stringify(response.data));
-
-      // Check for API limit message
       if (response.data.Note || response.data.Information) {
-        console.log('⚠️ Alpha Vantage API limit reached:', response.data.Note || response.data.Information);
+        console.log('⚠️ Alpha Vantage API limit reached');
         return [];
       }
 
@@ -94,7 +127,6 @@ class FinancialDataService {
         }];
       }
       
-      console.log('⚠️ No valid data in Alpha Vantage response');
       return [];
     } catch (error) {
       console.error('❌ Error fetching stock indices:', error.message);
@@ -106,6 +138,7 @@ class FinancialDataService {
     const names = {
       'SPY': 'S&P 500',
       'QQQ': 'Nasdaq 100',
+      'DIA': 'Dow Jones',
       'IWM': 'Russell 2000',
       'VTI': 'Total Stock Market'
     };
