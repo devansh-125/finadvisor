@@ -1,6 +1,7 @@
 /**
  * OpenRouter Financial Advisor Service
- * Provides AI-powered financial advice using OpenRouter API (Mixtral model)
+ * Uses Perplexity Sonar for real-time web search (stock prices, news)
+ * Uses GPT-4 Turbo for personal finance analysis
  */
 
 const { OpenAI } = require('openai');
@@ -18,7 +19,7 @@ class OpenAIFinancialService {
           apiKey: process.env.OPENROUTER_API_KEY.trim(),
           baseURL: 'https://openrouter.ai/api/v1'
         });
-        console.log('✅ OpenRouter API initialized with GPT-4 Turbo');
+        console.log('✅ OpenRouter API initialized');
       } catch (err) {
         console.error('OpenRouter initialization failed:', err.message);
         this.openai = null;
@@ -29,6 +30,32 @@ class OpenAIFinancialService {
       this.openai = null;
       throw new Error('OPENROUTER_API_KEY is required');
     }
+  }
+
+  /**
+   * Check if question needs real-time web search (stock prices, current news, etc.)
+   */
+  needsWebSearch(question) {
+    const lowerQuestion = question.toLowerCase();
+    
+    const webSearchPatterns = [
+      // Stock/Market prices
+      /\b(stock|share|market)\s*(price|rate|value|today|current|now|live)/i,
+      /\b(price|rate|value)\s*(of|for).*(stock|share|nse|bse)/i,
+      /\b(today|current|now|live|latest)\s*(price|rate|market|stock)/i,
+      /\b(nse|bse|nasdaq|nyse)\s*(price|rate)/i,
+      // Specific stock symbols
+      /\b(reliance|tcs|infosys|hdfc|icici|sbi|tata|wipro|bharti|itc|kotak)\b.*\b(price|stock|share)/i,
+      /\b(tesla|apple|google|amazon|microsoft|nvidia|meta)\b.*\b(price|stock|share)/i,
+      // Current/today keywords with financial terms
+      /what.*(today|current|now).*(price|rate|stock|market)/i,
+      /tell me.*(today|current|live).*(price|stock|market)/i,
+      // News and updates
+      /\b(latest|recent|today|current)\s*(news|update|announcement)/i,
+      /what.*(happening|news|update).*(market|stock|economy)/i,
+    ];
+
+    return webSearchPatterns.some(pattern => pattern.test(question));
   }
 
   async generateFinancialAdvice(question, analysis, rules, context = {}) {
@@ -43,14 +70,44 @@ class OpenAIFinancialService {
 
       // Detect if the question is finance-related
       const isFinanceRelated = this.isFinanceRelatedQuestion(question);
-      const prompt = this.buildPrompt(question, analysis, rules, context, isFinanceRelated);
+      
+      // Detect if we need real-time web search
+      const needsRealTimeData = this.needsWebSearch(question);
+      
+      // Choose model based on need
+      // perplexity/sonar-pro has web search for real-time data
+      // openai/gpt-4-turbo is better for personal finance analysis
+      const model = needsRealTimeData ? 'perplexity/sonar-pro' : 'openai/gpt-4-turbo';
+      console.log(`🤖 Using model: ${model} (needsRealTimeData: ${needsRealTimeData})`);
+      
+      const prompt = this.buildPrompt(question, analysis, rules, context, isFinanceRelated, needsRealTimeData);
       
       // Get conversation history from context (if available)
       const conversationHistory = context.conversationHistory || [];
       
-      // Use different system prompts based on question type
-      const systemPrompt = isFinanceRelated 
-        ? `You are an expert personal financial advisor in the FinAdvisor app.
+      // System prompt for web search model
+      const webSearchPrompt = `You are a financial research assistant with real-time web access.
+
+TASK: Search the web and provide CURRENT, LIVE data for the user's query.
+
+FOR STOCK PRICES:
+- Search for the CURRENT stock price from NSE/BSE India or relevant exchange
+- Include: Current price, today's change (%), day's high/low
+- Mention the time of the data (e.g., "As of 3:30 PM IST")
+- Use reliable sources: NSE India, BSE India, Google Finance, Yahoo Finance
+
+FOR MARKET NEWS:
+- Get the latest news and updates
+- Include dates and sources
+
+FORMATTING:
+- Use clear markdown headers
+- Bold important numbers: **₹1,234.56**
+- Include percentage changes with color indicators (📈 for up, 📉 for down)
+- Always cite your sources`;
+
+      // System prompt for personal finance
+      const financePrompt = `You are an expert personal financial advisor in the FinAdvisor app.
 You have access to the user's real financial data provided below.
 
 HOW TO RESPOND:
@@ -58,37 +115,29 @@ HOW TO RESPOND:
 2. Then, relate it to their personal financial situation with specific numbers
 3. Give actionable advice with exact ₹ amounts from their data
 4. For stocks/investments:
-   - Explain the investment opportunity clearly
    - Analyze if it fits their budget based on their surplus
    - Give pros and cons specific to THEIR financial situation
-   - Suggest realistic investment amounts (e.g., "With your ₹X surplus, you could invest ₹Y monthly")
-
-IMPORTANT LIMITATIONS:
-- You don't have real-time stock prices. Say "As of my last update" or "Check current prices on NSE/BSE"
-- For current prices, suggest checking apps like Groww, Zerodha, or Google Finance
-
-FORMATTING:
-- Use proper markdown with ## headers, bullet points (- or *)
-- Bold important numbers with **₹X,XXX**
-- Keep responses well-structured and easy to read
-- Use consistent bullet style (either all - or all •, not mixed)`
-        : `You are a knowledgeable AI assistant in the FinAdvisor app.
-
-HOW TO RESPOND:
-1. Answer the user's question directly and thoroughly
-2. For stocks/companies/investments:
-   - Provide factual information about the company
-   - Note that you don't have real-time prices (suggest checking Groww, Zerodha, Google Finance)
-   - If they want personalized advice, they can ask "should I invest based on my finances?"
-3. Be conversational and helpful
-
-IMPORTANT: You don't have access to real-time stock prices or market data. Always clarify this and suggest checking live sources.
+   - Suggest realistic investment amounts
 
 FORMATTING:
 - Use proper markdown with ## headers
-- Use consistent bullet points (- not •)
-- Bold **important terms**
-- Keep it clean and readable`;
+- Bold important numbers with **₹X,XXX**
+- Use consistent bullet points (-)`;
+
+      // System prompt for general questions
+      const generalPrompt = `You are a knowledgeable AI assistant in the FinAdvisor app.
+Answer the user's question directly and thoroughly.
+Use markdown formatting for clarity.`;
+
+      // Choose appropriate system prompt
+      let systemPrompt;
+      if (needsRealTimeData) {
+        systemPrompt = webSearchPrompt;
+      } else if (isFinanceRelated) {
+        systemPrompt = financePrompt;
+      } else {
+        systemPrompt = generalPrompt;
+      }
 
       // Build messages array with conversation history
       const messages = [
@@ -96,8 +145,8 @@ FORMATTING:
           role: 'system',
           content: systemPrompt
         },
-        // Include previous conversation messages for context
-        ...conversationHistory,
+        // Include previous conversation messages for context (limit for Perplexity)
+        ...(needsRealTimeData ? conversationHistory.slice(-4) : conversationHistory),
         // Add current user message
         {
           role: 'user',
@@ -106,10 +155,10 @@ FORMATTING:
       ];
 
       const completion = await this.openai.chat.completions.create({
-        model: 'openai/gpt-4-turbo',
+        model: model,
         messages: messages,
-        temperature: 0.7,
-        max_tokens: 1200
+        temperature: needsRealTimeData ? 0.3 : 0.7, // Lower temp for factual data
+        max_tokens: needsRealTimeData ? 1500 : 1200
       });
 
       const response = completion.choices[0]?.message?.content;
@@ -123,12 +172,13 @@ FORMATTING:
 
       return {
         response: response,
-        model: 'openai/gpt-4-turbo',
+        model: model,
         confidence: 0.95,
-        isFinanceRelated: isFinanceRelated, // Include whether this was a finance question
+        isFinanceRelated: isFinanceRelated,
+        needsRealTimeData: needsRealTimeData,
         metadata: {
           provider: 'openrouter',
-          model: 'openai/gpt-4-turbo',
+          model: model,
           tokens: completion.usage?.total_tokens || 0
         }
       };
@@ -207,10 +257,19 @@ FORMATTING:
     return hasPersonalKeyword || matchesPattern;
   }
 
-  buildPrompt(question, analysis, rules, context, isFinanceRelated = true) {
-    // For non-finance questions, just return the question directly - NO financial data
+  buildPrompt(question, analysis, rules, context, isFinanceRelated = true, needsRealTimeData = false) {
+    // For web search queries (real-time stock prices), just ask directly
+    if (needsRealTimeData) {
+      return `${question}
+
+Please search the web for the current/live data and provide accurate, up-to-date information.
+For Indian stocks, check NSE/BSE. For US stocks, check NASDAQ/NYSE.
+Include the current price, today's change, and the time of the data.`;
+    }
+    
+    // For non-finance questions, just return the question
     if (!isFinanceRelated) {
-      return question; // Just the raw question, no financial context
+      return question;
     }
 
     // For finance-related questions, include the full financial context
@@ -238,6 +297,7 @@ FORMATTING:
       .join(', ');
 
     const financialContext = `
+${stockDataFormatted ? stockDataFormatted : ''}
 USER'S FINANCIAL DATA:
 ━━━━━━━━━━━━━━━━━━━━━
 • Monthly Income: ₹${Math.round(monthlyIncome).toLocaleString('en-IN')}
@@ -253,9 +313,11 @@ USER'S QUESTION:
 "${question}"
 
 INSTRUCTIONS:
-1. First, answer the user's question directly
-2. Then, analyze how it applies to THEIR specific financial situation above
+1. First, answer the user's question directly using the REAL stock prices above (if provided)
+2. Then, analyze how it applies to THEIR specific financial situation
 3. If about investments/stocks:
+   - Use the ACTUAL current prices shown above
+   - Calculate how many shares they can buy with their surplus
    - Can they afford it with ₹${Math.round(monthlySurplus).toLocaleString('en-IN')} monthly surplus?
    - What amount would be safe to invest (usually 10-20% of surplus)?
    - Pros and cons for THEIR income level

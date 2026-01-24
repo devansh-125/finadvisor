@@ -8,6 +8,7 @@ const getRuleEngine = () => require('../services/ruleEngine');
 const getOpenAIServiceModule = () => require('../services/openaiService');
 const getFinancialAnalytics = () => require('../services/financialAnalytics');
 const getFinancialDataService = () => require('../services/financialDataService');
+const getStockService = () => require('../services/stockService').getStockService();
 const getAIQuery = () => require('../models/AIQuery')();
 const uuidv4 = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -87,10 +88,35 @@ router.post('/query', auth, async (req, res) => {
       marketData = await financialDataServiceInstance.getMarketData();
     }
 
+    // Layer 4.5: Fetch REAL-TIME stock prices if stocks are mentioned
+    let stockData = null;
+    let stockDataFormatted = '';
+    try {
+      const stockService = getStockService();
+      const detectedStocks = stockService.detectStockSymbols(question);
+      
+      if (detectedStocks.length > 0) {
+        console.log(`📊 Detected stocks in question: ${detectedStocks.map(s => s.symbol).join(', ')}`);
+        
+        // Fetch real prices
+        const stockPrices = await stockService.getMultipleStocks(detectedStocks);
+        
+        if (Object.keys(stockPrices).length > 0) {
+          stockData = stockPrices;
+          stockDataFormatted = stockService.formatStockDataForAI(stockPrices);
+          console.log(`✅ Fetched live prices for ${Object.keys(stockPrices).length} stocks`);
+        }
+      }
+    } catch (stockErr) {
+      console.error('⚠️ Stock fetch error (continuing without):', stockErr.message);
+    }
+
     // Layer 5: Generate AI advice
     const context = {
       kpis,
       marketData,
+      stockData,
+      stockDataFormatted,
       conversationHistory, // Add conversation history for context
       additionalContext: needsMarketData ? 'Include relevant market context in your response.' : null
     };
