@@ -41,18 +41,29 @@ class OpenAIFinancialService {
         throw error;
       }
 
-      const prompt = this.buildPrompt(question, analysis, rules, context);
+      // Detect if the question is finance-related
+      const isFinanceRelated = this.isFinanceRelatedQuestion(question);
+      const prompt = this.buildPrompt(question, analysis, rules, context, isFinanceRelated);
+      
+      // Use different system prompts based on question type
+      const systemPrompt = isFinanceRelated 
+        ? `You are a professional financial advisor providing personalized financial guidance. 
+Your role is to analyze user spending patterns and provide tailored, actionable financial advice.
+Be helpful, accurate, and conservative with recommendations. Consider risk tolerance and provide balanced advice.
+Format your response with clear sections, bullet points, and specific numbers when relevant.
+Always reference the user's actual financial data (income, expenses, savings) in your recommendations.`
+        : `You are a helpful AI assistant integrated into a financial advisor app called FinAdvisor.
+You can answer general questions, have casual conversations, and provide helpful information on any topic.
+When the user asks about finance, money, investments, budgeting, or their personal finances, you'll have access to their financial data.
+For non-financial questions, respond naturally and helpfully like a knowledgeable assistant.
+Keep responses concise but informative. Use markdown formatting when appropriate.`;
 
       const completion = await this.openai.chat.completions.create({
         model: 'openai/gpt-4-turbo',
         messages: [
           {
             role: 'system',
-            content: `You are a professional financial advisor providing personalized financial guidance. 
-Your role is to analyze user spending patterns and provide tailored, actionable financial advice.
-Be helpful, accurate, and conservative with recommendations. Consider risk tolerance and provide balanced advice.
-Format your response with clear sections, bullet points, and specific numbers when relevant.
-Always reference the user's actual financial data (income, expenses, savings) in your recommendations.`
+            content: systemPrompt
           },
           {
             role: 'user',
@@ -89,22 +100,85 @@ Always reference the user's actual financial data (income, expenses, savings) in
     }
   }
 
-  buildPrompt(question, analysis, rules, context) {
-  const {
-    totalSpent = 0,
-    categoryBreakdown = {},
-    averages = {},
-    timeframes = {},
-    userProfile = {}
-  } = analysis;
+  /**
+   * Detect if a question is related to personal finance
+   * @param {string} question - The user's question
+   * @returns {boolean} - Whether the question is finance-related
+   */
+  isFinanceRelatedQuestion(question) {
+    const lowerQuestion = question.toLowerCase();
+    
+    // Finance-related keywords
+    const financeKeywords = [
+      // Direct finance terms
+      'money', 'spend', 'spending', 'expense', 'expenses', 'budget', 'budgeting',
+      'save', 'saving', 'savings', 'invest', 'investing', 'investment',
+      'income', 'salary', 'earn', 'earnings', 'debt', 'loan', 'credit',
+      'finance', 'financial', 'bank', 'account', 'transaction',
+      // Actions related to finance
+      'afford', 'cost', 'price', 'pay', 'payment', 'bill', 'bills',
+      'tax', 'taxes', 'retirement', 'pension', 'insurance',
+      'stock', 'stocks', 'mutual fund', 'sip', 'fd', 'fixed deposit',
+      // Personal finance questions
+      'my money', 'my expenses', 'my spending', 'my budget', 'my savings',
+      'my income', 'my salary', 'my finances', 'my financial',
+      'how much', 'where did', 'what did i spend', 'am i spending',
+      // Advice seeking
+      'should i buy', 'can i afford', 'is it worth', 'save more',
+      'reduce spending', 'cut costs', 'financial advice', 'money advice',
+      'financial goal', 'financial health', 'emergency fund',
+      // Categories
+      'food expense', 'transport expense', 'utility', 'utilities',
+      'entertainment expense', 'health expense', 'education expense'
+    ];
 
-  const { summary = {}, alerts = [], recommendations = [] } = rules;
+    // Check if any finance keyword is in the question
+    const hasFinanceKeyword = financeKeywords.some(keyword => 
+      lowerQuestion.includes(keyword)
+    );
 
-  // Calculate key metrics
-  const monthlyIncome = (userProfile.income || 0) / 12;
-  const monthlyExpenses = timeframes.last30Days || totalSpent || 0;
-  const monthlySurplus = monthlyIncome - monthlyExpenses;
-  const savingsRate = monthlyIncome > 0 ? Math.round((monthlySurplus / monthlyIncome) * 100) : 0;
+    // Also check for question patterns about personal data
+    const personalFinancePatterns = [
+      /how (much|many).*(spend|spent|save|saved|earn|earned)/i,
+      /what.*(my|i).*(spend|expense|budget|saving|income)/i,
+      /where.*(my|i).*(money|spend)/i,
+      /show.*(my|me).*(expense|spending|budget|saving)/i,
+      /analyze.*(my|expense|spending|finance)/i,
+      /advice.*(money|finance|invest|save|budget)/i,
+      /tip.*(save|saving|money|budget|spend)/i
+    ];
+
+    const matchesPattern = personalFinancePatterns.some(pattern => 
+      pattern.test(question)
+    );
+
+    return hasFinanceKeyword || matchesPattern;
+  }
+
+  buildPrompt(question, analysis, rules, context, isFinanceRelated = true) {
+    // For non-finance questions, just return the question directly
+    if (!isFinanceRelated) {
+      return `User's question: "${question}"
+
+Please answer this question helpfully and concisely. This is a general question, not specifically about the user's personal finances.`;
+    }
+
+    // For finance-related questions, include the full financial context
+    const {
+      totalSpent = 0,
+      categoryBreakdown = {},
+      averages = {},
+      timeframes = {},
+      userProfile = {}
+    } = analysis;
+
+    const { summary = {}, alerts = [], recommendations = [] } = rules;
+
+    // Calculate key metrics
+    const monthlyIncome = (userProfile.income || 0) / 12;
+    const monthlyExpenses = timeframes.last30Days || totalSpent || 0;
+    const monthlySurplus = monthlyIncome - monthlyExpenses;
+    const savingsRate = monthlyIncome > 0 ? Math.round((monthlySurplus / monthlyIncome) * 100) : 0;
 
     // Get top spending categories
     const topCategories = Object.entries(categoryBreakdown || {})
