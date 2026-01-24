@@ -45,31 +45,42 @@ class OpenAIFinancialService {
       const isFinanceRelated = this.isFinanceRelatedQuestion(question);
       const prompt = this.buildPrompt(question, analysis, rules, context, isFinanceRelated);
       
+      // Get conversation history from context (if available)
+      const conversationHistory = context.conversationHistory || [];
+      
       // Use different system prompts based on question type
       const systemPrompt = isFinanceRelated 
         ? `You are a professional financial advisor providing personalized financial guidance. 
 Your role is to analyze user spending patterns and provide tailored, actionable financial advice.
 Be helpful, accurate, and conservative with recommendations. Consider risk tolerance and provide balanced advice.
 Format your response with clear sections, bullet points, and specific numbers when relevant.
-Always reference the user's actual financial data (income, expenses, savings) in your recommendations.`
+Always reference the user's actual financial data (income, expenses, savings) in your recommendations.
+Remember the context of previous messages in this conversation.`
         : `You are a helpful AI assistant integrated into a financial advisor app called FinAdvisor.
 You can answer general questions, have casual conversations, and provide helpful information on any topic.
 When the user asks about finance, money, investments, budgeting, or their personal finances, you'll have access to their financial data.
 For non-financial questions, respond naturally and helpfully like a knowledgeable assistant.
-Keep responses concise but informative. Use markdown formatting when appropriate.`;
+Keep responses concise but informative. Use markdown formatting when appropriate.
+Remember the context of previous messages in this conversation and refer back to them when relevant.`;
+
+      // Build messages array with conversation history
+      const messages = [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        // Include previous conversation messages for context
+        ...conversationHistory,
+        // Add current user message
+        {
+          role: 'user',
+          content: prompt
+        }
+      ];
 
       const completion = await this.openai.chat.completions.create({
         model: 'openai/gpt-4-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
+        messages: messages,
         temperature: 0.7,
         max_tokens: 1200
       });

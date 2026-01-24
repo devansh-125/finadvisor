@@ -30,6 +30,24 @@ router.post('/query', auth, async (req, res) => {
       return res.status(400).json({ message: 'Question is required' });
     }
 
+    // Fetch conversation history if this is an existing conversation
+    let conversationHistory = [];
+    if (conversationId) {
+      const previousMessages = await getAIQuery()
+        .find({ conversationId: conversationId })
+        .sort({ createdAt: -1 })
+        .limit(10) // Get last 10 messages for context
+        .lean();
+      
+      // Reverse to get chronological order and format for AI
+      conversationHistory = previousMessages.reverse().flatMap(msg => [
+        { role: 'user', content: msg.question },
+        { role: 'assistant', content: msg.response }
+      ]);
+      
+      console.log(`📜 Loaded ${previousMessages.length} previous messages for context`);
+    }
+
     // Layer 1: Analyze transactions
     const TransactionAnalyzer = getTransactionAnalyzer();
     const analysis = await TransactionAnalyzer.analyzeExpenses(req.user._id);
@@ -73,6 +91,7 @@ router.post('/query', auth, async (req, res) => {
     const context = {
       kpis,
       marketData,
+      conversationHistory, // Add conversation history for context
       additionalContext: needsMarketData ? 'Include relevant market context in your response.' : null
     };
 
