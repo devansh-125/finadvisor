@@ -422,31 +422,36 @@ const AIChat = () => {
                 {message.type === 'user' ? (
                   <p className="text-sm whitespace-pre-wrap font-medium">{message.content}</p>
                 ) : (
-                  <div className={`text-sm prose-sm max-w-none ${
-                    isDark ? 'text-slate-100' : 'text-gray-800'
+                  <div className={`text-sm prose prose-sm max-w-none ${
+                    isDark 
+                      ? 'prose-invert text-slate-100' 
+                      : 'text-gray-800'
                   }`}>
                     <ReactMarkdown
                       components={{
-                        h1: ({...props}) => <h1 className="text-lg font-bold mt-3 mb-2" {...props} />,
-                        h2: ({...props}) => <h2 className="text-base font-bold mt-2 mb-1" {...props} />,
+                        h1: ({...props}) => <h1 className="text-lg font-bold mt-4 mb-2 border-b border-slate-600 pb-1" {...props} />,
+                        h2: ({...props}) => <h2 className="text-base font-bold mt-3 mb-2" {...props} />,
                         h3: ({...props}) => <h3 className="text-sm font-semibold mt-2 mb-1" {...props} />,
-                        p: ({...props}) => <p className="my-1" {...props} />,
-                        ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5" {...props} />,
-                        ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5" {...props} />,
-                        li: ({...props}) => <li className="ml-2" {...props} />,
-                        strong: ({...props}) => <strong className="font-bold" {...props} />,
+                        p: ({...props}) => <p className="my-2 leading-relaxed" {...props} />,
+                        ul: ({...props}) => <ul className="my-2 ml-4 space-y-1" style={{listStyleType: 'disc'}} {...props} />,
+                        ol: ({...props}) => <ol className="my-2 ml-4 space-y-1" style={{listStyleType: 'decimal'}} {...props} />,
+                        li: ({...props}) => <li className="pl-1" style={{display: 'list-item'}} {...props} />,
+                        strong: ({...props}) => <strong className="font-bold text-cyan-400" {...props} />,
                         em: ({...props}) => <em className="italic" {...props} />,
                         code: ({...props}) => <code className={`px-1.5 py-0.5 rounded text-xs ${
                           isDark 
                             ? 'bg-slate-900/50 text-cyan-300' 
                             : 'bg-slate-100 text-blue-700'
                         }`} {...props} />,
-                        pre: ({...props}) => <pre className={`p-2 rounded overflow-x-auto text-xs my-1 ${
+                        pre: ({...props}) => <pre className={`p-3 rounded-lg overflow-x-auto text-xs my-2 ${
                           isDark 
                             ? 'bg-slate-900/70 text-cyan-300' 
                             : 'bg-slate-100 text-gray-900'
                         }`} {...props} />,
-                        hr: ({...props}) => <hr className="my-2" {...props} />,
+                        hr: ({...props}) => <hr className={`my-3 ${isDark ? 'border-slate-600' : 'border-gray-300'}`} {...props} />,
+                        blockquote: ({...props}) => <blockquote className={`border-l-4 pl-3 my-2 italic ${
+                          isDark ? 'border-cyan-500 text-slate-300' : 'border-blue-500 text-gray-600'
+                        }`} {...props} />,
                       }}
                     >
                       {message.content}
