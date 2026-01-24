@@ -50,18 +50,37 @@ class OpenAIFinancialService {
       
       // Use different system prompts based on question type
       const systemPrompt = isFinanceRelated 
-        ? `You are a professional financial advisor providing personalized financial guidance. 
-Your role is to analyze user spending patterns and provide tailored, actionable financial advice.
-Be helpful, accurate, and conservative with recommendations. Consider risk tolerance and provide balanced advice.
-Format your response with clear sections, bullet points, and specific numbers when relevant.
-Always reference the user's actual financial data (income, expenses, savings) in your recommendations.
-Remember the context of previous messages in this conversation.`
-        : `You are a helpful AI assistant integrated into a financial advisor app called FinAdvisor.
-You can answer general questions, have casual conversations, and provide helpful information on any topic.
-When the user asks about finance, money, investments, budgeting, or their personal finances, you'll have access to their financial data.
-For non-financial questions, respond naturally and helpfully like a knowledgeable assistant.
-Keep responses concise but informative. Use markdown formatting when appropriate.
-Remember the context of previous messages in this conversation and refer back to them when relevant.`;
+        ? `You are an expert personal financial advisor in the FinAdvisor app.
+You have access to the user's real financial data provided below.
+
+HOW TO RESPOND:
+1. First, directly answer what the user asked
+2. Then, if relevant, relate it to their personal financial situation
+3. Give specific, actionable advice with exact numbers from their data
+4. If they ask about stocks/investments:
+   - Provide the stock/investment information they asked for
+   - Then analyze if it fits their budget, goals, and risk profile
+   - Give pros and cons specific to THEIR situation
+   - Suggest how much they could realistically invest based on their surplus
+
+STYLE:
+- Be specific with numbers (use their actual income, savings, expenses)
+- Use clear sections with headers
+- Provide actionable steps with exact amounts
+- Be honest about risks and limitations
+- Keep advice practical and achievable for their income level`
+        : `You are a knowledgeable AI assistant in the FinAdvisor app.
+
+HOW TO RESPOND:
+1. Answer the user's question directly and thoroughly
+2. If they're asking about stocks, companies, investments, or financial topics:
+   - First give them the factual information they asked for
+   - Include relevant numbers, statistics, and current information
+   - If they seem interested in investing, mention they can ask about how it fits their personal finances
+3. Be conversational but informative
+4. Use markdown formatting for clarity (headers, bullet points, etc.)
+
+IMPORTANT: Answer what they asked first. Don't assume they want personal finance advice unless they specifically ask about "my money", "should I invest", etc.`;
 
       // Build messages array with conversation history
       const messages = [
@@ -113,66 +132,77 @@ Remember the context of previous messages in this conversation and refer back to
   }
 
   /**
-   * Detect if a question is related to personal finance
+   * Detect if a question is about the USER'S PERSONAL finances
+   * vs general questions (even about finance topics like stocks, companies, etc.)
    * @param {string} question - The user's question
-   * @returns {boolean} - Whether the question is finance-related
+   * @returns {boolean} - Whether the question is about USER's personal finance
    */
   isFinanceRelatedQuestion(question) {
     const lowerQuestion = question.toLowerCase();
     
-    // Finance-related keywords
-    const financeKeywords = [
-      // Direct finance terms
-      'money', 'spend', 'spending', 'expense', 'expenses', 'budget', 'budgeting',
-      'save', 'saving', 'savings', 'invest', 'investing', 'investment',
-      'income', 'salary', 'earn', 'earnings', 'debt', 'loan', 'credit',
-      'finance', 'financial', 'bank', 'account', 'transaction',
-      // Actions related to finance
-      'afford', 'cost', 'price', 'pay', 'payment', 'bill', 'bills',
-      'tax', 'taxes', 'retirement', 'pension', 'insurance',
-      'stock', 'stocks', 'mutual fund', 'sip', 'fd', 'fixed deposit',
-      // Personal finance questions
+    // EXCLUDE: Questions about external entities (companies, people, general knowledge)
+    const externalEntityPatterns = [
+      /who is|who are|who was/i,
+      /what is .*(company|stock|tesla|apple|google|amazon|microsoft|reliance|tata)/i,
+      /tell me about .*(him|her|them|it|company|person|ceo|founder)/i,
+      /his |her |their |its /i,  // Referring to someone/something else
+      /(elon|musk|ambani|bezos|gates|zuckerberg|buffett)/i,  // Famous people
+      /^(what|who|when|where|why|how) (is|are|was|were|did|does|do) (the|a|an|this|that)/i,
+    ];
+    
+    const isAboutExternalEntity = externalEntityPatterns.some(pattern => 
+      pattern.test(question)
+    );
+    
+    // If asking about external entity AND not mentioning "my" or "I", it's NOT personal finance
+    const mentionsPersonal = /\b(my|i |i'm|i've|i'd|me |mine)\b/i.test(question);
+    
+    if (isAboutExternalEntity && !mentionsPersonal) {
+      return false;
+    }
+    
+    // PERSONAL finance keywords - must be about USER's money
+    const personalFinanceKeywords = [
       'my money', 'my expenses', 'my spending', 'my budget', 'my savings',
-      'my income', 'my salary', 'my finances', 'my financial',
-      'how much', 'where did', 'what did i spend', 'am i spending',
-      // Advice seeking
-      'should i buy', 'can i afford', 'is it worth', 'save more',
-      'reduce spending', 'cut costs', 'financial advice', 'money advice',
-      'financial goal', 'financial health', 'emergency fund',
-      // Categories
-      'food expense', 'transport expense', 'utility', 'utilities',
-      'entertainment expense', 'health expense', 'education expense'
+      'my income', 'my salary', 'my finances', 'my financial', 'my debt',
+      'my account', 'my investment', 'my portfolio',
+      'i spend', 'i spent', 'i save', 'i saved', 'i earn', 'i earned',
+      'i owe', 'i paid', 'i bought', 'i invested',
+      'am i spending', 'should i save', 'should i invest', 'should i buy',
+      'can i afford', 'how do i save', 'how can i save', 'help me save',
+      'reduce my', 'cut my', 'improve my', 'analyze my', 'review my',
     ];
 
-    // Check if any finance keyword is in the question
-    const hasFinanceKeyword = financeKeywords.some(keyword => 
+    const hasPersonalKeyword = personalFinanceKeywords.some(keyword => 
       lowerQuestion.includes(keyword)
     );
-
-    // Also check for question patterns about personal data
+    
+    // Patterns that indicate PERSONAL finance questions
     const personalFinancePatterns = [
-      /how (much|many).*(spend|spent|save|saved|earn|earned)/i,
-      /what.*(my|i).*(spend|expense|budget|saving|income)/i,
-      /where.*(my|i).*(money|spend)/i,
-      /show.*(my|me).*(expense|spending|budget|saving)/i,
-      /analyze.*(my|expense|spending|finance)/i,
-      /advice.*(money|finance|invest|save|budget)/i,
-      /tip.*(save|saving|money|budget|spend)/i
+      /how (much|many).*(did )?(i |my )(spend|spent|save|saved|earn|earned)/i,
+      /what.*(did )?(i |my ).*(spend|expense|budget|saving|income)/i,
+      /where.*(did )?(i |my ).*(money|spend)/i,
+      /show.*(my|me).*(expense|spending|budget|saving|data|analysis)/i,
+      /analyze.*(my|me)/i,
+      /give me.*(advice|tips|suggestion).*(money|finance|save|budget|spend)/i,
+      /help me.*(save|budget|spend|invest|manage)/i,
+      /(advice|tips|suggestion) for (my|me)/i,
+      /based on my/i,
+      /according to my/i,
+      /looking at my/i,
     ];
 
     const matchesPattern = personalFinancePatterns.some(pattern => 
       pattern.test(question)
     );
 
-    return hasFinanceKeyword || matchesPattern;
+    return hasPersonalKeyword || matchesPattern;
   }
 
   buildPrompt(question, analysis, rules, context, isFinanceRelated = true) {
-    // For non-finance questions, just return the question directly
+    // For non-finance questions, just return the question directly - NO financial data
     if (!isFinanceRelated) {
-      return `User's question: "${question}"
-
-Please answer this question helpfully and concisely. This is a general question, not specifically about the user's personal finances.`;
+      return question; // Just the raw question, no financial context
     }
 
     // For finance-related questions, include the full financial context
@@ -200,22 +230,30 @@ Please answer this question helpfully and concisely. This is a general question,
       .join(', ');
 
     const financialContext = `
-USER FINANCIAL PROFILE:
-- Monthly Income: ₹${Math.round(monthlyIncome).toLocaleString('en-IN')}
-- Monthly Expenses (Last 30 Days): ₹${Math.round(monthlyExpenses).toLocaleString('en-IN')}
-- Monthly Surplus/Deficit: ₹${Math.round(monthlySurplus).toLocaleString('en-IN')}
-- Savings Rate: ${savingsRate}%
-- Total Savings: ₹${(userProfile.savings || 0).toLocaleString('en-IN')}
-- Financial Health Score: ${summary.overallHealthScore || 70}/100
-- Top Spending Categories: ${topCategories}
-- Current Alerts: ${alerts.length > 0 ? alerts.join(', ') : 'None'}
+USER'S FINANCIAL DATA:
+━━━━━━━━━━━━━━━━━━━━━
+• Monthly Income: ₹${Math.round(monthlyIncome).toLocaleString('en-IN')}
+• Monthly Expenses: ₹${Math.round(monthlyExpenses).toLocaleString('en-IN')}
+• Monthly Surplus (Available to Save/Invest): ₹${Math.round(monthlySurplus).toLocaleString('en-IN')}
+• Current Savings: ₹${(userProfile.savings || 0).toLocaleString('en-IN')}
+• Savings Rate: ${savingsRate}%
+• Financial Health Score: ${summary.overallHealthScore || 70}/100
+• Top Spending: ${topCategories}
+• User's Goals: ${userProfile.goals?.join(', ') || 'Not specified'}
 
 USER'S QUESTION:
 "${question}"
 
-Please provide personalized financial advice based on this user's specific situation above.
-Include actionable steps they can take and reference their actual numbers when relevant.
-Format response with sections, bullet points, and markdown for clarity.`;
+INSTRUCTIONS:
+1. First, answer the user's question directly
+2. Then, analyze how it applies to THEIR specific financial situation above
+3. If about investments/stocks:
+   - Can they afford it with ₹${Math.round(monthlySurplus).toLocaleString('en-IN')} monthly surplus?
+   - What amount would be safe to invest (usually 10-20% of surplus)?
+   - Pros and cons for THEIR income level
+   - Risk assessment based on their savings buffer
+4. Give specific actionable advice with exact ₹ amounts
+5. Use clear headers and bullet points`;
 
     return financialContext;
   }
