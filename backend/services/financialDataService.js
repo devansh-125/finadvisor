@@ -32,8 +32,8 @@ class FinancialDataService {
     try {
       const promises = [];
 
-      // Get major indices
-      if (this.apiKeys.alphaVantage) {
+      // Get major indices (Finnhub or Alpha Vantage)
+      if (this.apiKeys.finnhub || this.apiKeys.alphaVantage) {
         promises.push(this.getStockIndices());
       }
 
