@@ -799,7 +799,8 @@ const FinancialAnalytics = () => {
                     Major Indices
                   </h4>
                   <div className="space-y-3">
-                    {marketData.marketData?.indices?.map((index) => (
+                    {Array.isArray(marketData.marketData?.indices) && marketData.marketData.indices.length > 0 ? (
+                      marketData.marketData.indices.map((index) => (
                       <div key={index.symbol} className={`p-3 rounded-lg ${
                         isDark
                           ? 'bg-slate-800/50 border border-slate-700/30'
@@ -824,7 +825,10 @@ const FinancialAnalytics = () => {
                           </div>
                         </div>
                       </div>
-                    )) || <p className={isDark ? 'text-slate-400' : 'text-gray-500'}>No index data available</p>}
+                    ))
+                    ) : (
+                      <p className={isDark ? 'text-slate-400' : 'text-gray-500'}>No index data available</p>
+                    )}
                   </div>
                 </div>
 
@@ -955,7 +959,7 @@ const FinancialAnalytics = () => {
                     </select>
                   </div>
                   <div className="space-y-3">
-                    {marketData.news && marketData.news.length > 0 ? (
+                    {Array.isArray(marketData.news) && marketData.news.length > 0 ? (
                       <>
                         {marketData.news.slice(newsPage * 5, (newsPage + 1) * 5).map((article, index) => (
                           <div 
