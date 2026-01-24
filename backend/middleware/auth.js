@@ -1,6 +1,9 @@
 const jwt = require('jsonwebtoken');
 const getUser = () => require('../models/User')();
 
+// Use same fallback as auth.js routes
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
 const auth = async (req, res, next) => {
   try {
     console.log(`🔵 AUTH MIDDLEWARE - ${req.method} ${req.path}`);
@@ -20,7 +23,7 @@ const auth = async (req, res, next) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET);
       console.log('✅ JWT verified, userId:', decoded.userId);
       
       // Fetch the full user object

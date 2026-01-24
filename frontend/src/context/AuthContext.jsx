@@ -28,8 +28,15 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log('🔒 Unauthorized - token may be expired');
-      // Don't auto-logout here, let the component handle it
+      console.log('🔒 Unauthorized - clearing invalid token and redirecting to login');
+      // Clear the invalid token
+      localStorage.removeItem('authToken');
+      // Redirect to login if not already there
+      if (!window.location.pathname.includes('/login') && 
+          !window.location.pathname.includes('/auth/callback') &&
+          !window.location.pathname.includes('/register')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
