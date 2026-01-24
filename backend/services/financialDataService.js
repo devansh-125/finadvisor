@@ -11,7 +11,7 @@ class FinancialDataService {
     this.apiKeys = {
       alphaVantage: process.env.ALPHA_VANTAGE_API_KEY,
       financialModelingPrep: process.env.FMP_API_KEY,
-      newsApi: process.env.NEWS_API_KEY,
+      gnewsApi: process.env.GNEWS_API_KEY,
       freeCurrencyApi: process.env.FREE_CURRENCY_API_KEY
     };
 
@@ -124,37 +124,37 @@ class FinancialDataService {
 
 
   /**
-   * Get financial news relevant to user's interests
+   * Get financial news relevant to user's interests using GNews API
    */
-  async getFinancialNews(topics = ['personal finance', 'investing', 'budgeting']) {
+  async getFinancialNews(topics = ['finance', 'business', 'economy']) {
     const cacheKey = `news_${topics.join('_')}`;
     if (this.isCacheValid(cacheKey)) {
       return this.cache.get(cacheKey);
     }
 
-    if (!this.apiKeys.newsApi) {
-      throw new Error('News API key not configured');
+    if (!this.apiKeys.gnewsApi) {
+      throw new Error('GNews API key not configured');
     }
 
     try {
-      const query = topics.join(' OR ');
-      const response = await axios.get('https://newsapi.org/v2/everything', {
+      // GNews API - works on deployed domains with free tier
+      const response = await axios.get('https://gnews.io/api/v4/search', {
         params: {
-          q: query,
-          language: 'en',
-          sortBy: 'publishedAt',
-          pageSize: 10,
-          apiKey: this.apiKeys.newsApi
+          q: 'finance OR stock market OR economy',
+          lang: 'en',
+          country: 'us',
+          max: 10,
+          apikey: this.apiKeys.gnewsApi
         }
       });
 
-      const news = response.data.articles.map(article => ({
+      const news = (response.data.articles || []).map(article => ({
         title: article.title,
         description: article.description,
         url: article.url,
-        source: article.source.name,
+        source: article.source?.name || 'Unknown',
         publishedAt: article.publishedAt,
-        imageUrl: article.urlToImage,
+        imageUrl: article.image,
         relevance: this.calculateNewsRelevance(article, topics)
       })).sort((a, b) => b.relevance - a.relevance);
 
@@ -162,7 +162,7 @@ class FinancialDataService {
       this.cache.set(cacheKey, result);
       return result;
     } catch (error) {
-      console.error('Error fetching financial news:', error);
+      console.error('Error fetching financial news from GNews:', error.message);
       throw error;
     }
   }
