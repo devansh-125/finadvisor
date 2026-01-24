@@ -33,8 +33,16 @@ class FinancialDataService {
       const promises = [];
 
       // Get major indices (Finnhub or Alpha Vantage)
+      console.log('🔑 API Keys available:', {
+        finnhub: !!this.apiKeys.finnhub,
+        alphaVantage: !!this.apiKeys.alphaVantage
+      });
+      
       if (this.apiKeys.finnhub || this.apiKeys.alphaVantage) {
+        console.log('📊 Fetching stock indices...');
         promises.push(this.getStockIndices());
+      } else {
+        console.log('⚠️ No stock API keys configured, skipping indices');
       }
 
       // Get economic indicators
